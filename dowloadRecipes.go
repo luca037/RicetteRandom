@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
     "log"
+    "strings"
 	//"sync"
 
 	"golang.org/x/net/html"
@@ -15,24 +16,27 @@ func main() {
     // salvo i link relativi alle pagine (pagine e ricette) in due channels
     pagesUrls := make(chan string, 50)
     pagesUrls <- URL
+    pageHeads := make(chan *html.Node, len(pagesUrls))
     recipesUrls := make(chan string, 15*len(pagesUrls))
-    htmlHeads := make(chan *html.Node, len(pagesUrls))
+    recipesHeads := make(chan *html.Node, len(recipesUrls))
 
     // run
-    go MkeRequest(pagesUrls, htmlHeads)
-    go ParseRecipesPage(htmlHeads, recipesUrls, pagesUrls)
+    go MkeRequest(pagesUrls, pageHeads)
+    go ParseRecipesPage(pageHeads, recipesUrls, pagesUrls)
+    go MkeRequest(recipesUrls, recipesHeads)
 
     // stampa
-    for link := range recipesUrls {
-        fmt.Println(link)
+    for head := range recipesHeads {
+        parseRecipe(head)
+        break
     }
 }
 
 // Effettua le richieste agli indirizzi url passati nel canale e insrisce 
 // la testa della testa dell'albero html della pagina.
-func MkeRequest(pUrls <-chan string, heads chan<- *html.Node) {
+func MkeRequest(urls <-chan string, heads chan<- *html.Node) {
     defer close(heads)
-    for url := range pUrls {
+    for url := range urls {
         log.Printf("INFO - Dowload %s\n", url)
         // effettuo richiesta
         resp, err := http.Get(url)
@@ -93,5 +97,27 @@ func getNodeAttrVal(node *html.Node, key string) string {
     return "noVal"
 }
 
-func ParseRecipe() {
+// Preorder traversal bootstrap
+func ParseRecipe(heads <-chan *html.Node) {
+    for head := range heads {
+        parseRecipe(head)
+        break
+    }
+}
+
+// Preorder traversal
+func parseRecipe(node *html.Node) {
+    // ingredienti della ricetta
+    if node.Type == html.TextNode && getNodeAttrVal(node.Parent.Parent, "class") == "gz-ingredient" {
+        for _, ch := range node.Data {
+            // pulizia stringa (vedi ASCII table)
+            if ch >= 32 && ch <= 126 {
+                fmt.Printf("%c", ch)
+            }
+        }
+        fmt.Print(" ")
+	}
+	for c := node.FirstChild; c != nil; c = c.NextSibling {
+		parseRecipe(c)
+	}
 }
