@@ -3,39 +3,37 @@ package main
 import (
 	"fmt"
 	"net/http"
+    "log"
 	//"sync"
 
 	"golang.org/x/net/html"
 )
 
-const URL = "https://www.giallozafferano.it/ricette-cat/page2/Primi/pasta/"
+const URL = "https://www.giallozafferano.it/ricette-cat/Primi/pasta/"
 
 func main() {
     // salvo i link relativi alle pagine (pagine e ricette) in due channels
-    urls := make(chan string, 50)
-    links := make(chan string, 15*len(urls))
-    htmlHeads := make(chan *html.Node, len(urls))
-
-    urls <- URL
-    urls <- URL
-    close(urls)
+    pagesUrls := make(chan string, 50)
+    pagesUrls <- URL
+    recipesUrls := make(chan string, 15*len(pagesUrls))
+    htmlHeads := make(chan *html.Node, len(pagesUrls))
 
     // run
-    go mkeRequest(urls, htmlHeads)
-    go parseRecipesPage(htmlHeads, links)
+    go MkeRequest(pagesUrls, htmlHeads)
+    go ParseRecipesPage(htmlHeads, recipesUrls, pagesUrls)
 
     // stampa
-    for link := range links {
+    for link := range recipesUrls {
         fmt.Println(link)
     }
 }
 
 // Effettua le richieste agli indirizzi url passati nel canale e insrisce 
 // la testa della testa dell'albero html della pagina.
-func mkeRequest(urls <-chan string, hH chan<- *html.Node) {
-    defer close(hH)
-    for url := range urls {
-        fmt.Printf("INFO - Dowload %s\n", url)
+func MkeRequest(pUrls <-chan string, heads chan<- *html.Node) {
+    defer close(heads)
+    for url := range pUrls {
+        log.Printf("INFO - Dowload %s\n", url)
         // effettuo richiesta
         resp, err := http.Get(url)
         if err != nil {
@@ -46,49 +44,46 @@ func mkeRequest(urls <-chan string, hH chan<- *html.Node) {
         if err != nil {
             panic("ERROR - Parsing")
         }
-        hH <- head
+        heads <- head
     }
 }
 
 // Preorder traversa bootstrap
-func parseRecipesPage(hH <-chan *html.Node, l chan<- string) {
-    defer close(l)
-    for head := range hH {
-        traverseHtmlTree(head, l)
+func ParseRecipesPage(heads <-chan *html.Node, rUrls, pUrls chan<- string) {
+    defer close(rUrls)
+    for head := range heads {
+        nextPage := false
+        parseRecipesPage(head, rUrls, pUrls, &nextPage)
+        if !nextPage {
+            close(pUrls)
+        }
     }
 }
 
 // Preorder traversal
-func traverseHtmlTree(node *html.Node, l chan<- string) {
+func parseRecipesPage(node *html.Node, rUrls, urls chan<- string, nextPage *bool) {
     // operazioni su tutti i nodi
     // prelevo il link alla pagina della ricetta
     if node.Parent != nil && node.Type == html.ElementNode {
-        for _, ap := range node.Parent.Attr {
-            if ap.Key == "class" && ap.Val == "gz-title" {
-                l <- getNodeAttrVal(node, "href")
-                break
-            }
+        if getNodeAttrVal(node.Parent, "class") == "gz-title" {
+            rUrls <- getNodeAttrVal(node, "href")
         }
     }
-
     // prelevo il link alla pagina successiva
-    //if node.Type == html.ElementNode && node.Data == "a" {
-    //    if getNodeAttrVal(node, "class") == "gz-arrow next" {
-    //        //fmt.Println("trovato")
-    //        //pl <- getNodeAttrVal(node, "href")
-    //        //*nextPage = true
-    //    }
-    //}
-
+    if node.Type == html.ElementNode && node.Data == "a" {
+        if getNodeAttrVal(node, "class") == "gz-arrow next" {
+            urls <- getNodeAttrVal(node, "href")
+            *nextPage = true
+        }
+    }
     // attraversamento
     for c := node.FirstChild; c != nil; c = c.NextSibling {
-        traverseHtmlTree(c, l)
-    }
-    // chiusura canali se sono tornato alla testa
-     if node.Parent == nil {
+        parseRecipesPage(c, rUrls, urls, nextPage)
     }
 }
 
+// Ricerca tra gli attributi del nodo e torna il valore corrispondente alla
+// key passata.
 func getNodeAttrVal(node *html.Node, key string) string {
     for _, a := range node.Attr {
         if key == a.Key {
@@ -96,4 +91,7 @@ func getNodeAttrVal(node *html.Node, key string) string {
         }
     }
     return "noVal"
+}
+
+func ParseRecipe() {
 }
