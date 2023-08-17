@@ -1,8 +1,8 @@
 package main
 
 import (
+	"encoding/xml"
 	"os"
-    "encoding/xml"
 
 	gzut "github.com/luca037/RicetteRandom/gialloZafferanoUtils"
 	"golang.org/x/net/html"
@@ -26,19 +26,19 @@ func main() {
 	go gzut.Request(recipesUrls, recipesHeads)
 	go gzut.ParseRecipe(recipesHeads, recipesToSave)
 	// save to file
-    if err := os.MkdirAll(kOUT_PATH_DIR, os.ModePerm); err != nil {
-        panic(err)
-    }
+	if err := os.MkdirAll(kOUT_PATH_DIR, os.ModePerm); err != nil {
+		panic(err)
+	}
 	for r := range recipesToSave {
-        file, err := os.Create(kOUT_PATH_DIR + r.Name + ".xml")
-        if err != nil {
-            panic(err)
-        }
-        defer file.Close()
-        encoder := xml.NewEncoder(file)
-        encoder.Indent("", "    ")
-        if err := encoder.Encode(r); err != nil {
-            panic(err)
-        }
-    }
+		file, err := os.Create(kOUT_PATH_DIR + r.Name + ".xml")
+		if err != nil {
+			panic(err)
+		}
+		defer file.Close()
+		encoder := xml.NewEncoder(file)
+		encoder.Indent("", "    ")
+		if err := encoder.Encode(r); err != nil {
+			panic(err)
+		}
+	}
 }

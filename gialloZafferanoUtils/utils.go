@@ -79,7 +79,7 @@ func getNodeAttrVal(node *html.Node, key string) string {
 
 // Preorder traversal bootstrap
 func ParseRecipe(heads <-chan *html.Node, out chan<- Recipe) {
-    defer close(out)
+	defer close(out)
 	for head := range heads {
 		var r Recipe
 		parseRecipe(head, &r)
