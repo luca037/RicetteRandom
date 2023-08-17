@@ -1,4 +1,4 @@
-package main
+package giallozafferanoutils
 
 import (
 	"log"
@@ -14,7 +14,7 @@ type Recipe struct {
 
 // Effettua le richieste agli indirizzi url passati nel canale e insrisce
 // la testa della testa dell'albero html della pagina.
-func MkeRequest(urls <-chan string, heads chan<- *html.Node) {
+func Request(urls <-chan string, heads chan<- *html.Node) {
 	defer close(heads)
 	for url := range urls {
 		log.Printf("INFO - Dowload %s\n", url)
@@ -79,6 +79,7 @@ func getNodeAttrVal(node *html.Node, key string) string {
 
 // Preorder traversal bootstrap
 func ParseRecipe(heads <-chan *html.Node, out chan<- Recipe) {
+    defer close(out)
 	for head := range heads {
 		var r Recipe
 		parseRecipe(head, &r)
