@@ -12,7 +12,10 @@ class CookBook {
      CookBook() {}
      CookBook(const std::vector<Recipe>& rec) : recipes_{rec} {}
 
-     // mod
+     CookBook(const CookBook&) = default;
+     CookBook(CookBook&&) = default;
+
+     // insert new recipe
      void insert(const Recipe& r) { recipes_.push_back(r); }
 
      friend std::ostream& operator<<(std::ostream& os, const CookBook& cb) {
@@ -25,6 +28,9 @@ class CookBook {
          }
          return os;
      };
+
+     CookBook& operator=(const CookBook&) = default;
+     CookBook& operator=(CookBook&&) = default;
 
  private:
      std::vector<Recipe> recipes_;

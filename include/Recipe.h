@@ -12,6 +12,9 @@ class Recipe {
      Recipe(const std::string& name="", const std::string& ing="", const std::string& prep="") :
          name_{name}, ingredients_{ing}, preparation_{prep} { }
 
+     Recipe(const Recipe&) = default;
+     Recipe(Recipe&&) = default;
+
      // non mod
      std::string name() const { return name_; }
      std::string ingredients() const { return ingredients_; }
@@ -22,8 +25,12 @@ class Recipe {
      void set_ingredients(const std::string& ing) { ingredients_ = ing; }
      void set_preparation(const std::string& prep) { preparation_ = prep; }
 
-     friend bool operator==(const Recipe& lhs, const Recipe& rhs) { return lhs.name() == rhs.name(); }
-     friend bool operator!=(const Recipe& lhs, const Recipe& rhs) { return lhs.name() != rhs.name(); }
+     friend bool operator==(const Recipe& lhs, const Recipe& rhs) { 
+         return lhs.name() == rhs.name(); 
+     }
+     friend bool operator!=(const Recipe& lhs, const Recipe& rhs) { 
+         return lhs.name() != rhs.name(); 
+     }
      friend std::ostream& operator<<(std::ostream& os, const Recipe& r) {
          return os << "{" 
                    << std::quoted("Name") << ": " << std::quoted(r.name_) << ", "
@@ -31,6 +38,9 @@ class Recipe {
                    << std::quoted("Preparation") << ": " << r.preparation_ 
                    << "}";
      }
+
+     Recipe& operator=(const Recipe&) = default;
+     Recipe& operator=(Recipe&&) = default;
 
  private:
     std::string name_;

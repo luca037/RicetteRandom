@@ -11,7 +11,13 @@ class XmlRecipeDeserializer {
  public:
      XmlRecipeDeserializer() {}
 
+     XmlRecipeDeserializer(const XmlRecipeDeserializer&) = delete;
+     XmlRecipeDeserializer(XmlRecipeDeserializer&&) = default;
+
      Recipe deserialize(const std::string& path);
+
+     XmlRecipeDeserializer& operator=(const XmlRecipeDeserializer&) = delete;
+     XmlRecipeDeserializer& operator=(XmlRecipeDeserializer&&) = default;
 
  private:
      pugi::xml_document doc_;
