@@ -14,7 +14,7 @@ type Recipe struct {
 
 // Effettua le richieste agli indirizzi url passati nel canale e insrisce
 // la testa della testa dell'albero html della pagina.
-func Request(urls <-chan string, heads chan<- *html.Node) {
+func MkeRequest(urls <-chan string, heads chan<- *html.Node) {
 	defer close(heads)
 	for url := range urls {
 		log.Printf("INFO - Dowload %s\n", url)
@@ -91,9 +91,9 @@ func ParseRecipe(heads <-chan *html.Node, out chan<- Recipe) {
 func parseRecipe(node *html.Node, rec *Recipe) {
 	// titolo ricetta
 	if node.Type == html.TextNode && getNodeAttrVal(node.Parent.Parent, "class") == "gz-title-content gz-innerdesktop" {
-		title := strings.TrimSpace(removeNonPrintableASCII(node.Data))
-		if len(title) != 0 {
-			rec.Name += title
+		n := strings.TrimSpace(removeNonPrintableASCII(node.Data))
+		if len(n) != 0 {
+			rec.Name += n
 		}
 	}
 	// ingredienti della ricetta
