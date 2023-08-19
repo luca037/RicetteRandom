@@ -4,9 +4,11 @@ set(CMAKE_CXX_STANDARD 17)
 
 project(Ricette LANGUAGES CXX)
 
-include_directories(third_party/pugixml)
+find_package(Curses REQUIRED)
 
+include_directories(third_party/pugixml)
 include_directories(include)
+include_directories(include ${CURSES_INCLUDE_DIR})
 
 add_library(Ricette
     include/CookBook.h
@@ -18,6 +20,7 @@ add_library(Ricette
 add_executable(ricetterandom
     src/ricetterandom.cpp
     )
-target_link_libraries(ricetterandom pugixml)
 
+target_link_libraries(ricetterandom pugixml)
 target_link_libraries(ricetterandom Ricette)
+target_link_libraries(ricetterandom Ricette ${CURSES_LIBRARIES})

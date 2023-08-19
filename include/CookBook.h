@@ -15,8 +15,14 @@ class CookBook {
      CookBook(const CookBook&) = default;
      CookBook(CookBook&&) = default;
 
+     // return book size (number of recipes)
+     int size() const { return recipes_.size(); }
+
      // insert new recipe
      void insert(const Recipe& r) { recipes_.push_back(r); }
+
+     // get all recipes
+     std::vector<Recipe> get_recipes() const { return recipes_; }
 
      friend std::ostream& operator<<(std::ostream& os, const CookBook& cb) {
          os << "[";
@@ -31,6 +37,8 @@ class CookBook {
 
      CookBook& operator=(const CookBook&) = default;
      CookBook& operator=(CookBook&&) = default;
+
+     ~CookBook() = default;
 
  private:
      std::vector<Recipe> recipes_;
