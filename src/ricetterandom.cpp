@@ -1,13 +1,14 @@
 #include <iostream>
 #include <filesystem>
+#include <fstream>
 #include <bits/getopt_core.h>
 #include <cstdlib>
 #include <random>
-#include <fstream>
+#include <memory>
 
 #include "../include/XmlRecipeDeserializer.h"
 #include "../include/CookBook.h"
-#include "../include/Window.h"
+#include "../include/WindowManager.h"
 
 namespace fs = std::filesystem;
 namespace gz = giallozafferano;
@@ -23,7 +24,6 @@ int random_int(int min, int max) {
 }
 
 int main(int argc, char **argv) {
-
     // manage command line opt
     int parse;
     while ((parse = getopt(argc, argv, "d")) != -1) {
@@ -34,8 +34,6 @@ int main(int argc, char **argv) {
     }
 
     // init
-    gz::initenv();
-    gz::Window win{80, 80, 0, 0};
     gz::CookBook c_book{};
     gz::XmlRecipeDeserializer deserializer{};
 
@@ -48,17 +46,16 @@ int main(int argc, char **argv) {
     }
 
     // generate random recipes
-    win.display("Type 'n' to generate a random recipe ot 's' to quit.", 0, 0);
+    std::shared_ptr<gz::WindowManager> wm = gz::WindowManager::get_instance();
+    wm->create_window("main", 80, 80);
+    wm->display_on_focused("Type 'n' to generate a random recipe ot 's' to quit.", 0, 0);
     char c{};
-    while ((c = win.get_ch()) != 's') {
-        win.clear();
+    while ((c = wm->getch_from_focused()) != 's') {
+        wm->clear_focused();
         if (c == 'n') {
-            win.display(c_book.get_recipes()[random_int(0, c_book.size() - 1)].name().c_str(), 0, 0);
-            win.refresh();
+            wm->display_on_focused(c_book.get_recipes()[random_int(0, c_book.size() - 1)].name().c_str(), 0, 0);
         }
     }
-    
-    gz::endenv();
 
     return 0;
 }

@@ -11,10 +11,14 @@ include_directories(include)
 include_directories(include ${CURSES_INCLUDE_DIR})
 
 add_library(Ricette
+    include/Window.h
+    src/Window.cpp
     include/CookBook.h
     include/Recipe.h
     include/XmlRecipeDeserializer.h
     src/XmlRecipeDeserializer.cpp
+    include/WindowManager.h
+    src/WindowManager.cpp
     )
 
 add_executable(ricetterandom
