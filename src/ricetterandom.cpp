@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <random>
 #include <memory>
+#include <string>
 
 #include "../include/XmlRecipeDeserializer.h"
 #include "../include/CookBook.h"
@@ -13,8 +14,8 @@
 namespace fs = std::filesystem;
 namespace gz = giallozafferano;
 
-const std::string kRecipesDirsPaths = "../recipesDirsPaths.txt";
-constexpr char kDowloadRecipeCmd[] = "go run ../dowloadRecipes.go";
+const std::string kRecipesDirsPaths = "./recipesDirsPaths.txt";
+constexpr char kDowloadRecipeCmd[] = "../RicetteRandom";
 
 int random_int(int min, int max) {
     std::random_device rd; // random number from hardware
@@ -47,13 +48,30 @@ int main(int argc, char **argv) {
 
     // generate random recipes
     std::shared_ptr<gz::WindowManager> wm = gz::WindowManager::get_instance();
-    wm->create_window("main", 80, 80);
-    wm->display_on_focused("Type 'n' to generate a random recipe ot 's' to quit.", 0, 0);
+    wm->create_win("bg-border", 41, 81)->set_border();
+    wm->get_focused()->refresh();
+    wm->create_win("main", 39, 79, 1, 1);
+    wm->get_focused()->display_refresh("Type 'n' to generate a random recipe ot 's' to quit.", 0, 0);
+
+    //// piccolo test
+    //wm->create_win("input", 20, 40, 20, 20)->set_border();
+    //wm->get_focused()->display("Premere quls per uscire", 1, 1);
+    //wm->get_focused()->refresh();
+
+    //bool found;
+    //if ((found = wm->find_win("main")))
+    //    wm->get_focused()->display(std::to_string(found).c_str(), 0, 0);
+    //wm->get_focused()->refresh();
+
+    //wm->get_focused()->get_ch();
+
     char c{};
-    while ((c = wm->getch_from_focused()) != 's') {
-        wm->clear_focused();
+    while ((c = wm->get_focused()->get_ch()) != 's') {
+        wm->get_focused()->clear();
         if (c == 'n') {
-            wm->display_on_focused(c_book.get_recipes()[random_int(0, c_book.size() - 1)].name().c_str(), 0, 0);
+            wm->get_focused()->display_refresh(c_book.get_recipes()[random_int(0, c_book.size() - 1)].name().c_str(), 0, 0);
+        } else {
+            wm->get_focused()->display_refresh("Type 'n' to generate a random recipe or 's' to quit.", 0, 0);
         }
     }
 
