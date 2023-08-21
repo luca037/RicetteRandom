@@ -1,6 +1,8 @@
 #include "../include/XmlRecipeDeserializer.h"
 
-giallozafferano::Recipe giallozafferano::XmlRecipeDeserializer::deserialize(const std::string& path) {
+namespace giallozafferano {
+
+Recipe giallozafferano::XmlRecipeDeserializer::deserialize(const std::string& path) {
     Recipe r{};
 
     pugi::xml_parse_result res = doc_.load_file(path.c_str());
@@ -12,3 +14,5 @@ giallozafferano::Recipe giallozafferano::XmlRecipeDeserializer::deserialize(cons
     r.set_preparation(head.child_value("Preparation"));
     return r;
 }
+
+} // end namespace

@@ -42,4 +42,4 @@ Window& Window::operator=(Window&& w) {
     return *this;
 }
 
-}
+} // end namespace

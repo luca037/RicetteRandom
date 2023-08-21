@@ -22,6 +22,7 @@ class Window {
      // mod
      void set_height(int h) { height_ = h; }
      void set_length(int l) { length_ = l; }
+     void set_border() { wborder(win_, 0, 0, 0, 0, 0, 0, 0, 0); }
 
      void display(const char* str, int y, int x) {
          mvwprintw(win_, y, x, "%s", str);

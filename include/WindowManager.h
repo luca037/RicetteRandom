@@ -10,29 +10,29 @@ namespace giallozafferano {
 
 class WindowManager {
  public:
-    static std::shared_ptr<WindowManager> get_instance() {
-         if (!instance_) {
+     static std::shared_ptr<WindowManager> get_instance() {
+         if (!instance_)
              instance_ = std::shared_ptr<WindowManager>{new WindowManager{}};
-             //index_focus_ = 0;
-         }
-        return instance_;
+         return instance_;
      }
 
-     void create_window(const std::string& name, int h=0, int l=0, int y=0, int x=0);
-     void display_on_focused(const std::string& str, int y, int x);
-     char getch_from_focused() const { if (!focused_) return 0; return focused_->get_ch(); }
-     void clear_focused() { focused_->clear(); }
+     WindowManager(const WindowManager&) = delete;
+     WindowManager(WindowManager&&) = delete;
+     WindowManager& operator=(const WindowManager&) = delete;
+     WindowManager& operator=(WindowManager&&) = delete;
 
-     //std::shared_ptr<Window> get_focused() const { return windows_[ }
+     std::shared_ptr<Window> create_win(const std::string& name, int h=0, int l=0, int y=0, int x=0);
+     std::shared_ptr<Window> get_focused() { return focused_; }
+     bool find_win(const std::string& name);
      //void close_window(std::shared_ptr<Window> win);
 
-    ~WindowManager() { endwin(); }
+     ~WindowManager() { endwin(); }
 
  private:
      WindowManager() { initscr(); }
      static std::shared_ptr<WindowManager> instance_;
-     static std::map<std::string, Window> windows_;
-     static Window* focused_;
+     static std::map<std::string, std::shared_ptr<Window>> windows_;
+     static std::shared_ptr<Window> focused_;
 };
 
 }

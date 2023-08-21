@@ -1,29 +1,25 @@
 #include "../include/WindowManager.h"
+#include <memory>
 
 namespace giallozafferano {
 
 std::shared_ptr<WindowManager> WindowManager::instance_ = nullptr;
-std::map<std::string, Window> WindowManager::windows_;
-Window* WindowManager::focused_ = nullptr;
+std::map<std::string, std::shared_ptr<Window>> WindowManager::windows_;
+std::shared_ptr<Window> WindowManager::focused_;
 
-/*! TODO: modificare la doppia ricerca non necessaria
- *  \todo modificare la doppia ricerca non necessaria
- */
-void WindowManager::create_window(const std::string& name, int h, int l, int y, int x) {
-    windows_[name] = Window{h, l, y, x};
-    focused_ = &windows_[name];
+std::shared_ptr<Window> WindowManager::create_win(const std::string& name, int h, int l, int y, int x) {
+    focused_ = std::make_shared<Window>(h, l, y, x);
+    windows_[name] = focused_;
+    return focused_;
 }
 
-void WindowManager::display_on_focused(const std::string& str, int y, int x) {
-    if (!focused_) return;
-    focused_->display(str.c_str(), y, x);
-    focused_->refresh();
+bool WindowManager::find_win(const std::string& name) {
+    auto ptr = windows_.find(name);
+    if (ptr != windows_.end()) {
+        focused_ = ptr->second;
+        return true;
+    }
+    return false;
 }
 
-//void WindowManager::close_window(std::shared_ptr<Window> win) {
-//    std::vector<std::shared_ptr<Window>>::iterator w = std::find(windows_.begin(), windows_.end(), win);
-//    if (w != windows_.end())
-//        windows_.erase(w);
-//}
-
-}
+} // end namespace
