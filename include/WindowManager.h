@@ -29,7 +29,10 @@ class WindowManager {
      ~WindowManager() { endwin(); }
 
  private:
-     WindowManager() { initscr(); }
+     /*! TODO: Funzioni per le opzioni
+      *  \todo Funzioni per le opzioni
+      */
+     WindowManager() { initscr(); setlocale(LC_ALL, ""); noecho(); }
      static std::shared_ptr<WindowManager> instance_;
      static std::map<std::string, std::shared_ptr<Window>> windows_;
      static std::shared_ptr<Window> focused_;

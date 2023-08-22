@@ -10,22 +10,22 @@ import (
 	"golang.org/x/net/html"
 )
 
-// Indirizzo url da cui partono le richieste (prima pagina ricetta)
-const kURL = "https://www.giallozafferano.it/ricette-cat/Secondi-piatti/"
+// Indirizzo url da cui partono le richieste (prima pagina ricetta). (DA SETTARE)
+const kURL = "https://www.giallozafferano.it/ricette-cat/Bevande/"
 
 // Totale pagine della ricetta dell'url (numero in fondo alla prima pagina).
 // Fissa la dimensione di alcuni channels, non indica il numero di pagine
-// da cui vengono estratte le ricette.
-const kTOT_PAGES = 74
+// da cui vengono estratte le ricette. (DA SETTARE)
+const kTOT_PAGES = 6
 
 // Numero di ricette per pagina (solitamente è 15). Fissa la dimensione di
 // alcuni channels.
-const kRECIPE_PER_PAGE = 15
+const kRECIPES_PER_PAGE = 15
 
-// Path cartella in cui salvare le ricette estratte.
-const kOUT_PATH_DIR = "ricette/secondi_piatti/"
+// Path cartella in cui salvare le ricette estratte. (DA SETTARE)
+const kOUT_PATH_DIR = "ricette/bevande/"
 
-// Path file contenente i path delle cartelle contenenti le ricette
+// Path file contenente i path delle cartelle contenenti le ricette.
 const kRECIPES_DIRS_PATHS = "recipesDirsPaths.txt"
 
 func main() {
@@ -33,7 +33,7 @@ func main() {
 	pagesUrls := make(chan string, kTOT_PAGES)
 	pagesUrls <- kURL
 	pageHeads := make(chan *html.Node, len(pagesUrls))
-	recipesUrls := make(chan string, 15*len(pagesUrls))
+	recipesUrls := make(chan string, kRECIPES_PER_PAGE*len(pagesUrls))
 	recipesHeads := make(chan *html.Node, len(recipesUrls))
 	recipesToSave := make(chan gzut.Recipe, len(recipesUrls))
 

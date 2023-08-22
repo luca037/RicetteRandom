@@ -1,11 +1,14 @@
-#include <iostream>
 #include <filesystem>
 #include <fstream>
 #include <bits/getopt_core.h>
 #include <cstdlib>
 #include <random>
 #include <memory>
+#include <sstream>
 #include <string>
+#include <vector>
+#include <cctype>
+#include <iostream>
 
 #include "../include/XmlRecipeDeserializer.h"
 #include "../include/CookBook.h"
@@ -24,6 +27,29 @@ int random_int(int min, int max) {
     return distr(gen);
 }
 
+std::string parent_name(const fs::path& path) {
+    size_t pos = path.parent_path().string().find_last_of('/');
+    return path.parent_path().string().substr(pos + 1);
+}
+
+std::string print_menu(const std::vector<std::string>& opts) {
+    std::ostringstream menu;
+    menu << "Scegli una delle seguenti portate:\n";
+    int i = 1;
+    for (const std::string& opt : opts)
+        menu << '\t' << std::to_string(i++) + " - " << opt << '\n';
+    menu << "Premi 's' per uscire.";
+    return menu.str();
+}
+
+std::string print_recipe_info(const gz::Recipe& recipe) {
+    std::ostringstream oss;
+    oss << "Nome: " << recipe.name() << '\n' << '\n'
+        << "Ingredienti: " << recipe.ingredients() << '\n' << '\n'
+        << "Preparazione: " << recipe.preparation();
+    return oss.str();
+}
+
 int main(int argc, char **argv) {
     // manage command line opt
     int parse;
@@ -34,44 +60,42 @@ int main(int argc, char **argv) {
         }
     }
 
-    // init
+    // init book and deserializer
     gz::CookBook c_book{};
     gz::XmlRecipeDeserializer deserializer{};
 
-    // insert recipes
+    // insert recipes in the book
     std::ifstream ifile{kRecipesDirsPaths};
     for (std::string line; ifile >> line; ) {
         for (const fs::directory_entry& entry : fs::directory_iterator(line)) {
-            c_book.insert(deserializer.deserialize(entry.path().string()));
+            c_book.insert(
+                    parent_name(entry), 
+                    deserializer.deserialize(entry.path().string())
+            );
         }
     }
 
-    // generate random recipes
+    // crate the windows
     std::shared_ptr<gz::WindowManager> wm = gz::WindowManager::get_instance();
-    wm->create_win("bg-border", 41, 81)->set_border();
+    wm->create_win("bg-border", 41, 141)->set_border();
     wm->get_focused()->refresh();
-    wm->create_win("main", 39, 79, 1, 1);
-    wm->get_focused()->display_refresh("Type 'n' to generate a random recipe ot 's' to quit.", 0, 0);
+    wm->create_win("main", 39, 139, 1, 1);
 
-    //// piccolo test
-    //wm->create_win("input", 20, 40, 20, 20)->set_border();
-    //wm->get_focused()->display("Premere quls per uscire", 1, 1);
-    //wm->get_focused()->refresh();
+    // display menu
+    std::vector<std::string> types= c_book.get_recipes_types();
+    wm->get_focused()->display_refresh(print_menu(types).c_str(), 0, 0);
 
-    //bool found;
-    //if ((found = wm->find_win("main")))
-    //    wm->get_focused()->display(std::to_string(found).c_str(), 0, 0);
-    //wm->get_focused()->refresh();
-
-    //wm->get_focused()->get_ch();
-
+    // random display recipes
     char c{};
     while ((c = wm->get_focused()->get_ch()) != 's') {
-        wm->get_focused()->clear();
-        if (c == 'n') {
-            wm->get_focused()->display_refresh(c_book.get_recipes()[random_int(0, c_book.size() - 1)].name().c_str(), 0, 0);
-        } else {
-            wm->get_focused()->display_refresh("Type 'n' to generate a random recipe or 's' to quit.", 0, 0);
+        int entry;
+        if (isdigit(c) && (entry = int(c - '0')) <= types.size()) {
+            wm->get_focused()->clear();
+            std::vector<gz::Recipe> rec = c_book.get_recipes(types[entry - 1]);
+            wm->get_focused()->display_refresh(print_recipe_info(rec[random_int(0, rec.size() - 1)]).c_str(), 0, 0);
+        } else if (c == 'm') {
+            wm->get_focused()->clear();
+            wm->get_focused()->display_refresh(print_menu(types).c_str(), 0, 0);
         }
     }
 
