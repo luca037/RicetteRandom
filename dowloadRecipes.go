@@ -30,20 +30,19 @@ const kRECIPES_DIRS_PATHS = "recipesDirsPaths.txt"
 
 func main() {
 	// salvo i link relativi alle pagine (pagine e ricette) in due channels
-	pagesUrls := make(chan string, kTOT_PAGES)
-	pagesUrls <- kURL
-	pageHeads := make(chan *html.Node, len(pagesUrls))
-	recipesUrls := make(chan string, kRECIPES_PER_PAGE*len(pagesUrls))
-	recipesHeads := make(chan *html.Node, len(recipesUrls))
-	recipesToSave := make(chan gzut.Recipe, len(recipesUrls))
+	pagesUrls := make(chan string, kTOT_PAGES) // url pag contenenti gli url delle ricette
+	pagesUrls <- kURL // url di partenza
+	pageHeads := make(chan *html.Node, len(pagesUrls)) // head html pag contenenti url delle ricette
+	recipesUrls := make(chan string, kRECIPES_PER_PAGE*len(pagesUrls)) // url delle ricette
+	recipesHeads := make(chan *html.Node, len(recipesUrls)) // head html ricette
+	recipesToSave := make(chan gzut.Recipe, len(recipesUrls)) // Recipe da serializzare in xml
 
-	// run
 	go gzut.MkeRequest(pagesUrls, pageHeads)
 	go gzut.ParseRecipesPage(pageHeads, recipesUrls, pagesUrls)
 	go gzut.MkeRequest(recipesUrls, recipesHeads)
 	go gzut.ParseRecipe(recipesHeads, recipesToSave)
 
-	// save dir path into file
+    // salvo dove si trova la cartella contenente i file xml (serve al programma in C++)
 	file, err := os.OpenFile(kRECIPES_DIRS_PATHS, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatal(err)
@@ -51,7 +50,7 @@ func main() {
 	defer file.Close()
 	file.Write([]byte(os.Getenv("PWD") + "/" + kOUT_PATH_DIR + "\n")) // abs path
 
-	// save recipes into files
+	// serializzazione ricette in file formato xml
 	if err := os.MkdirAll(kOUT_PATH_DIR, os.ModePerm); err != nil {
 		log.Fatal(err)
 	}
@@ -69,10 +68,11 @@ func main() {
 	}
 }
 
+// Ritorna una stringa in cui non sono presenti i segni di punteggiatura specificati.
 func rmSomePunctuation(in string) string {
 	var out strings.Builder
 	for _, ch := range in {
-		if ch == '"' || ch == ':' || ch == ',' || ch == '.' {
+        if ch == '"' || ch == ':' || ch == ',' || ch == '.' { // TODO: Passare la punteggiatura tramite argomento
 			continue
 		} else if ch == ' ' {
 			out.WriteRune('_')

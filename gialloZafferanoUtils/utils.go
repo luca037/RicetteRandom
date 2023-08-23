@@ -8,12 +8,13 @@ import (
 	"golang.org/x/net/html"
 )
 
+// Rappresenta una ricetta.
 type Recipe struct {
 	Name, Ingredients, Preparation string
 }
 
-// Effettua le richieste agli indirizzi url passati nel canale e insrisce
-// la testa della testa dell'albero html della pagina.
+// Effettua le richieste agli indirizzi url in urls e insrisce la testa della 
+// testa dell'albero html della pagina in heads.
 func MkeRequest(urls <-chan string, heads chan<- *html.Node) {
 	defer close(heads)
 	for url := range urls {
@@ -32,7 +33,11 @@ func MkeRequest(urls <-chan string, heads chan<- *html.Node) {
 	}
 }
 
-// Preorder traversa bootstrap
+// Effettua il parse degli alberi html delle pagine contenenti gli url delle ricette. 
+// Tali alberi sono presenti in heads.
+// Inserisce gli url delle ricette in rUrls, in pUrls inserisce il l'url della 
+// prossima pagina contenente ricette. Se non sono presenti ulteriori ricette 
+// il canale viene chiuso. (Preorder boostrap)
 func ParseRecipesPage(heads <-chan *html.Node, rUrls, pUrls chan<- string) {
 	defer close(rUrls)
 	for head := range heads {
@@ -44,7 +49,7 @@ func ParseRecipesPage(heads <-chan *html.Node, rUrls, pUrls chan<- string) {
 	}
 }
 
-// Preorder traversal
+// Preorder traversal.
 func parseRecipesPage(node *html.Node, rUrls, urls chan<- string, nextPage *bool) {
 	// operazioni su tutti i nodi
 	// prelevo il link alla pagina della ricetta
@@ -77,7 +82,9 @@ func getNodeAttrVal(node *html.Node, key string) string {
 	return "noVal"
 }
 
-// Preorder traversal bootstrap
+// Effettua il parse degli alberi html corrispondenti alle pagine che contengono 
+// nome, ingredienti e preparazione delle ricette. Tali alberi vengono passati
+// in heads, le ricette caricate in out. (Preorder boostrap)
 func ParseRecipe(heads <-chan *html.Node, out chan<- Recipe) {
 	defer close(out)
 	for head := range heads {
@@ -87,7 +94,7 @@ func ParseRecipe(heads <-chan *html.Node, out chan<- Recipe) {
 	}
 }
 
-// Preorder traversal
+// Preorder traversal.
 func parseRecipe(node *html.Node, rec *Recipe) {
 	// titolo ricetta
 	if node.Type == html.TextNode && getNodeAttrVal(node.Parent.Parent, "class") == "gz-title-content gz-innerdesktop" {

@@ -19,26 +19,17 @@ class Window {
      Window& operator=(const Window& w);
      Window& operator=(Window&& w);
 
-     // mod
      void set_height(int h) { height_ = h; }
      void set_length(int l) { length_ = l; }
-     void set_border() { wborder(win_, 0, 0, 0, 0, 0, 0, 0, 0); }
-
-     void display(const char* str, int y, int x) {
-         mvwprintw(win_, y, x, "%s", str);
-     }
-     void clear() { wclear(win_); }
-     void erase() { werase(win_); }
-     void refresh() { wrefresh(win_); }
-     void display_refresh(const char* str, int y, int x) {
-         display(str, y, x);
-         refresh();
-     }
-
-     // non mod
      int height() const { return height_; }
      int length() const { return length_; }
 
+     void set_border() { wborder(win_, 0, 0, 0, 0, 0, 0, 0, 0); }
+     void display(const char* str, int y, int x) { mvwprintw(win_, y, x, "%s", str); }
+     void clear() { wclear(win_); }
+     void erase() { werase(win_); }
+     void refresh() { wrefresh(win_); }
+     void display_refresh(const char* str, int y, int x) { display(str, y, x); refresh(); }
      char get_ch() const { return wgetch(win_); }
 
      ~Window() { delwin(win_); }

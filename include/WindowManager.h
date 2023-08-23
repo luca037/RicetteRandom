@@ -24,14 +24,10 @@ class WindowManager {
      std::shared_ptr<Window> create_win(const std::string& name, int h=0, int l=0, int y=0, int x=0);
      std::shared_ptr<Window> get_focused() { return focused_; }
      bool find_win(const std::string& name);
-     //void close_window(std::shared_ptr<Window> win);
 
      ~WindowManager() { endwin(); }
 
  private:
-     /*! TODO: Funzioni per le opzioni
-      *  \todo Funzioni per le opzioni
-      */
      WindowManager() { initscr(); setlocale(LC_ALL, ""); noecho(); }
      static std::shared_ptr<WindowManager> instance_;
      static std::map<std::string, std::shared_ptr<Window>> windows_;
