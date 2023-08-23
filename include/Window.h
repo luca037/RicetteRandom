@@ -23,14 +23,16 @@ class Window {
      void set_length(int l) { length_ = l; }
      int height() const { return height_; }
      int length() const { return length_; }
+     std::string content() const { return content_; }
 
      void set_border() { wborder(win_, 0, 0, 0, 0, 0, 0, 0, 0); }
-     void display(const char* str, int y, int x) { mvwprintw(win_, y, x, "%s", str); }
-     void clear() { wclear(win_); }
-     void erase() { werase(win_); }
+     void display(const char* str, int y, int x) { mvwprintw(win_, y, x, "%s", str); content_ = str; }
+     void clear() { wclear(win_); content_ = ""; }
+     void erase() { werase(win_); content_ = ""; }
      void refresh() { wrefresh(win_); }
      void display_refresh(const char* str, int y, int x) { display(str, y, x); refresh(); }
      char get_ch() const { return wgetch(win_); }
+     void resize(int y, int x) { wresize(win_, y, x); }
 
      ~Window() { delwin(win_); }
 
@@ -40,6 +42,7 @@ class Window {
      int length_;
      int x_pos_;
      int y_pos_;
+     std::string content_;
 };
  
 } // end namespace

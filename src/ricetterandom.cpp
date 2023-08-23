@@ -1,3 +1,4 @@
+#include <csignal>
 #include <filesystem>
 #include <fstream>
 #include <bits/getopt_core.h>
@@ -85,6 +86,8 @@ int main(int argc, char **argv) {
 
     // setup finestre
     std::shared_ptr<gz::WindowManager> wm = gz::WindowManager::get_instance();
+    signal(SIGWINCH, wm->handle_resize);
+
     wm->create_win("bg-border", 41, 141)->set_border();
     wm->get_focused()->refresh();
     wm->create_win("main", 39, 139, 1, 1);
