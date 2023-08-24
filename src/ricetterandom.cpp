@@ -20,6 +20,7 @@ namespace gz = giallozafferano;
 
 // Path file contenente i path in cui si trovano le ricette scaricate dal programma Go.
 const std::string kRecipesDirsPaths = "./recipesDirsPaths.txt";
+
 // Comando per lanciare l'esecuzione del programama Go che scarica le ricette. (Compila ed esegue).
 constexpr char kDowloadRecipeCmd[] = "go run ../dowloadRecipes.go";
 
@@ -86,11 +87,11 @@ int main(int argc, char **argv) {
 
     // setup finestre
     std::shared_ptr<gz::WindowManager> wm = gz::WindowManager::get_instance();
-    signal(SIGWINCH, wm->handle_resize);
+    signal(SIGWINCH, wm->handle_resize); // gestione ridimesionamento terminal
 
-    wm->create_win("bg-border", 41, 141)->set_border();
+    wm->create_win("bg-border", 41, 141, 10, 10)->set_border();
     wm->get_focused()->refresh();
-    wm->create_win("main", 39, 139, 1, 1);
+    wm->create_win("main", 39, 139, 11, 11);
 
     // display menu
     std::vector<std::string> types= c_book.get_recipes_types();
