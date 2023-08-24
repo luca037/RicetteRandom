@@ -44,7 +44,7 @@ std::string print_menu(const std::vector<std::string>& opts) {
     menu << "Scegli una delle seguenti portate:\n";
     int i = 1;
     for (const std::string& opt : opts)
-        menu << '\t' << std::to_string(i++) + " - " << opt << '\n';
+        menu << "    "  << std::to_string(i++) + " - " << opt << '\n';
     menu << "Premi 's' per uscire.";
     return menu.str();
 }
@@ -89,13 +89,13 @@ int main(int argc, char **argv) {
     std::shared_ptr<gz::WindowManager> wm = gz::WindowManager::get_instance();
     signal(SIGWINCH, wm->handle_resize); // gestione ridimesionamento terminal
 
-    wm->create_win("bg-border", 41, 141, 10, 10)->set_border();
+    wm->create_win("main-border", 41, 141)->set_border();
     wm->get_focused()->refresh();
-    wm->create_win("main", 39, 139, 11, 11);
+    wm->create_win("main", 39, 139, 1, 1);
 
     // display menu
     std::vector<std::string> types= c_book.get_recipes_types();
-    wm->get_focused()->display_refresh(print_menu(types).c_str(), 0, 0);
+    wm->get_focused()->display_refresh(print_menu(types), 0, 0);
 
     // stampa random delle ricette
     char c{};
@@ -104,10 +104,10 @@ int main(int argc, char **argv) {
         if (isdigit(c) && (entry = int(c - '0')) <= types.size()) {
             wm->get_focused()->clear();
             std::vector<gz::Recipe> rec = c_book.get_recipes(types[entry - 1]);
-            wm->get_focused()->display_refresh(print_recipe_info(rec[random_int(0, rec.size() - 1)]).c_str(), 0, 0);
+            wm->get_focused()->display_refresh(print_recipe_info(rec[random_int(0, rec.size() - 1)]), 0, 0);
         } else if (c == 'm') {
             wm->get_focused()->clear();
-            wm->get_focused()->display_refresh(print_menu(types).c_str(), 0, 0);
+            wm->get_focused()->display_refresh(print_menu(types), 0, 0);
         }
     }
 

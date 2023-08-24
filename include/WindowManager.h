@@ -53,7 +53,7 @@ class WindowManager {
              // ridisegno la finestra
              p.second->resize(p.second->height(), p.second->length());
              if (hb) p.second->set_border();
-             if (!cont.empty()) p.second->display(cont.c_str(), 0, 0);
+             if (!cont.empty()) p.second->display(cont, 0, 0);
              p.second->refresh();
          }
      }

@@ -39,8 +39,8 @@ class Window {
     }
 
     // Scrive str nella finestra a partire dalle coordinate passate.
-    void display(const char* str, int y, int x) { 
-        mvwprintw(win_, y, x, "%s", str);
+    void display(const std::string& str, int y, int x) { 
+        mvwprintw(win_, y, x, "%s", str.c_str());
         content_ = str; 
     }
 
@@ -62,7 +62,7 @@ class Window {
     void refresh() { wrefresh(win_); }
 
     // Display poi refresh finestra.
-    void display_refresh(const char* str, int y, int x) {
+    void display_refresh(const std::string& str, int y, int x) {
         display(str, y, x);
         refresh(); 
     }
