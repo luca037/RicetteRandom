@@ -9,38 +9,40 @@ namespace giallozafferano {
 
 class Recipe {
  public:
-     Recipe(const std::string& name="", const std::string& ing="", const std::string& prep="") :
-         name_{name}, ingredients_{ing}, preparation_{prep} { }
+    Recipe(const std::string& name="", const std::string& ing="", const std::string& prep="") :
+        name_{name}, ingredients_{ing}, preparation_{prep} { }
 
-     Recipe(const Recipe&) = default;
-     Recipe(Recipe&&) = default;
+    Recipe(const Recipe&) = default;
+    Recipe(Recipe&&) = default;
+    Recipe& operator=(const Recipe&) = default;
+    Recipe& operator=(Recipe&&) = default;
 
-     // non mod
-     std::string name() const { return name_; }
-     std::string ingredients() const { return ingredients_; }
-     std::string preparation() const { return preparation_; }
+    // non mod
+    std::string name() const { return name_; }
+    std::string ingredients() const { return ingredients_; }
+    std::string preparation() const { return preparation_; }
 
-     // mod
-     void set_name(const std::string& name) { name_ = name; }
-     void set_ingredients(const std::string& ing) { ingredients_ = ing; }
-     void set_preparation(const std::string& prep) { preparation_ = prep; }
+    // mod
+    void set_name(const std::string& name) { name_ = name; }
+    void set_ingredients(const std::string& ing) { ingredients_ = ing; }
+    void set_preparation(const std::string& prep) { preparation_ = prep; }
 
-     friend bool operator==(const Recipe& lhs, const Recipe& rhs) { 
-         return lhs.name() == rhs.name(); 
-     }
-     friend bool operator!=(const Recipe& lhs, const Recipe& rhs) { 
-         return lhs.name() != rhs.name(); 
-     }
-     friend std::ostream& operator<<(std::ostream& os, const Recipe& r) {
-         return os << "{" 
-                   << std::quoted("Name") << ": " << std::quoted(r.name_) << ", "
-                   << std::quoted("Ingredients") << ": " << std::quoted(r.ingredients_) << ", "
-                   << std::quoted("Preparation") << ": " << r.preparation_ 
-                   << "}";
-     }
+    friend bool operator==(const Recipe& lhs, const Recipe& rhs) { 
+        return lhs.name() == rhs.name(); 
+    }
 
-     Recipe& operator=(const Recipe&) = default;
-     Recipe& operator=(Recipe&&) = default;
+    friend bool operator!=(const Recipe& lhs, const Recipe& rhs) { 
+        return lhs.name() != rhs.name(); 
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const Recipe& r) {
+        return os << "{" 
+            << std::quoted("Name") << ": " << std::quoted(r.name_) << ", "
+            << std::quoted("Ingredients") << ": " << std::quoted(r.ingredients_) << ", "
+            << std::quoted("Preparation") << ": " << r.preparation_ 
+            << "}";
+    }
+
 
  private:
     std::string name_;

@@ -11,39 +11,39 @@ namespace giallozafferano {
 
 class CookBook {
  public:
-     CookBook() {}
+    CookBook() {}
 
-     CookBook(const CookBook&) = default;
-     CookBook(CookBook&&) = default;
-     CookBook& operator=(const CookBook&) = default;
-     CookBook& operator=(CookBook&&) = default;
+    CookBook(const CookBook&) = default;
+    CookBook(CookBook&&) = default;
+    CookBook& operator=(const CookBook&) = default;
+    CookBook& operator=(CookBook&&) = default;
 
-     int size() const { return recipes_.size(); }
+    int size() const { return recipes_.size(); }
 
-     // insert new recipe
-     void insert(const std::string& type, const Recipe& r) { 
-         recipes_[type].push_back(r);
-     }
+    // insert new recipe
+    void insert(const std::string& type, const Recipe& r) { 
+        recipes_[type].push_back(r);
+    }
 
-     // insert multipe recipes
-     void insert(const std::string& type, const std::vector<Recipe>& rec) { 
-         recipes_[type] = rec;
-     }
+    // insert multipe recipes
+    void insert(const std::string& type, const std::vector<Recipe>& rec) { 
+        recipes_[type] = rec;
+    }
 
-     std::vector<Recipe> get_recipes(const std::string& type) {
-         return recipes_[type];
-     }
-     std::vector<std::string> get_recipes_types() const {
-         std::vector<std::string> keys;
-         for (const auto& e : recipes_)
-             keys.push_back(e.first);
-         return keys;
-     }
+    std::vector<Recipe> get_recipes(const std::string& type) {
+        return recipes_[type];
+    }
+    std::vector<std::string> get_recipes_types() const {
+        std::vector<std::string> keys;
+        for (const auto& e : recipes_)
+            keys.push_back(e.first);
+        return keys;
+    }
 
-     ~CookBook() = default;
+    ~CookBook() = default;
 
  private:
-     std::map<std::string, std::vector<Recipe>> recipes_;
+    std::map<std::string, std::vector<Recipe>> recipes_;
 };
 
 } // end namespace

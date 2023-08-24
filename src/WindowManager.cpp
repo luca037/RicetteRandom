@@ -22,27 +22,4 @@ bool WindowManager::find_win(const std::string& name) {
     return false;
 }
 
-void WindowManager::handle_resize(int sig) {
-    // reset ncurses env
-    endwin();
-    refresh();
-
-    // init curses env
-    initscr();
-
-    // ridisegno tutte le finestre
-    for (auto& p : windows_) {
-        // pulizia finestra
-        std::string cont = p.second->content();
-        bool hb = p.second-> has_border();
-        p.second->clear(); // pulisco tutto
-
-        // ridisegno la finestra
-        p.second->resize(p.second->height(), p.second->length());
-        if (hb) p.second->set_border();
-        if (!cont.empty()) p.second->display(cont.c_str(), 0, 0);
-        p.second->refresh();
-    }
-}
-
 } // end namespace
