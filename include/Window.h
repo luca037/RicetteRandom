@@ -1,9 +1,9 @@
 #ifndef WINDOW_H
 #define WINDOW_H
 
-#include "Recipe.h"
 #include <cstdlib>
 #include <curses.h>
+#include "Recipe.h"
 
 namespace giallozafferano {
 
@@ -38,13 +38,19 @@ class Window {
         has_border_ = true; 
     }
 
+    // Rimuove il bordo alla finestra al prossimo display.
+    void remove_border() {
+        has_border_ = false;
+    }
+
     // Scrive str nella finestra a partire dalle coordinate passate.
     void display(const std::string& str, int y, int x) { 
         mvwprintw(win_, y, x, "%s", str.c_str());
+        if (has_border_) set_border();
         content_ = str; 
     }
 
-    // Cancella il contenuto della finestra.
+    // Cancella il contenuto della finestra e il bordo.
     void clear() { 
         wclear(win_); 
         content_ = "";
@@ -56,6 +62,12 @@ class Window {
         werase(win_);
         content_ = "";
         has_border_ = false;
+    }
+
+    // Cancella il contenuto, mantiene il bordo.
+    void clear_content() {
+        wclear(win_);
+        if (has_border_) set_border();
     }
 
     // Refresh finestra.

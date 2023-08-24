@@ -30,19 +30,19 @@ const kRECIPES_DIRS_PATHS = "recipesDirsPaths.txt"
 
 func main() {
 	// salvo i link relativi alle pagine (pagine e ricette) in due channels
-	pagesUrls := make(chan string, kTOT_PAGES) // url pag contenenti gli url delle ricette
-	pagesUrls <- kURL // url di partenza
-	pageHeads := make(chan *html.Node, len(pagesUrls)) // head html pag contenenti url delle ricette
+	pagesUrls := make(chan string, kTOT_PAGES)                         // url pag contenenti gli url delle ricette
+	pagesUrls <- kURL                                                  // url di partenza
+	pageHeads := make(chan *html.Node, len(pagesUrls))                 // head html pag contenenti url delle ricette
 	recipesUrls := make(chan string, kRECIPES_PER_PAGE*len(pagesUrls)) // url delle ricette
-	recipesHeads := make(chan *html.Node, len(recipesUrls)) // head html ricette
-	recipesToSave := make(chan gzut.Recipe, len(recipesUrls)) // Recipe da serializzare in xml
+	recipesHeads := make(chan *html.Node, len(recipesUrls))            // head html ricette
+	recipesToSave := make(chan gzut.Recipe, len(recipesUrls))          // Recipe da serializzare in xml
 
 	go gzut.MkeRequest(pagesUrls, pageHeads)
 	go gzut.ParseRecipesPage(pageHeads, recipesUrls, pagesUrls)
 	go gzut.MkeRequest(recipesUrls, recipesHeads)
 	go gzut.ParseRecipe(recipesHeads, recipesToSave)
 
-    // salvo dove si trova la cartella contenente i file xml (serve al programma in C++)
+	// salvo dove si trova la cartella contenente i file xml (serve al programma in C++)
 	file, err := os.OpenFile(kRECIPES_DIRS_PATHS, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatal(err)
@@ -72,7 +72,7 @@ func main() {
 func rmSomePunctuation(in string) string {
 	var out strings.Builder
 	for _, ch := range in {
-        if ch == '"' || ch == ':' || ch == ',' || ch == '.' { // TODO: Passare la punteggiatura tramite argomento
+		if ch == '"' || ch == ':' || ch == ',' || ch == '.' { // TODO: Passare la punteggiatura tramite argomento
 			continue
 		} else if ch == ' ' {
 			out.WriteRune('_')

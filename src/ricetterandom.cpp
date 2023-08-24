@@ -1,4 +1,6 @@
+#include <clocale>
 #include <csignal>
+#include <curses.h>
 #include <filesystem>
 #include <fstream>
 #include <bits/getopt_core.h>
@@ -45,7 +47,7 @@ std::string print_menu(const std::vector<std::string>& opts) {
     int i = 1;
     for (const std::string& opt : opts)
         menu << "    "  << std::to_string(i++) + " - " << opt << '\n';
-    menu << "Premi 's' per uscire.";
+    menu << " Premi 'q' per uscire.";
     return menu.str();
 }
 
@@ -54,8 +56,8 @@ std::string print_menu(const std::vector<std::string>& opts) {
 std::string print_recipe_info(const gz::Recipe& recipe) {
     std::ostringstream oss;
     oss << "Nome: " << recipe.name() << '\n' << '\n'
-        << "Ingredienti: " << recipe.ingredients() << '\n' << '\n'
-        << "Preparazione: " << recipe.preparation();
+        << " Ingredienti: " << recipe.ingredients() << '\n' << '\n'
+        << " Preparazione: " << recipe.preparation();
     return oss.str();
 }
 
@@ -85,30 +87,29 @@ int main(int argc, char **argv) {
         }
     }
 
-    // setup finestre
+    // setup window manager
     std::shared_ptr<gz::WindowManager> wm = gz::WindowManager::get_instance();
+    setlocale(LC_ALL, ""); // per caratteri unicode
+    noecho(); // non mostra input utente
+    curs_set(0); // cursore non visibile
     signal(SIGWINCH, wm->handle_resize); // gestione ridimesionamento terminal
 
-    wm->create_win("main-border", 41, 141)->set_border();
-    wm->get_focused()->refresh();
-    wm->create_win("main", 39, 139, 1, 1);
-
-    // display menu
+    // creazione finestre
+    wm->create_win("info", 20, 40, 1, 142)->set_border();
     std::vector<std::string> types= c_book.get_recipes_types();
-    wm->get_focused()->display_refresh(print_menu(types), 0, 0);
+    wm->get_focused()->display_refresh(print_menu(types), 1, 1);
+
+    wm->create_win("main", 39, 139, 1, 1)->set_border();
 
     // stampa random delle ricette
     char c{};
-    while ((c = wm->get_focused()->get_ch()) != 's') {
+    while ((c = wm->get_focused()->get_ch()) != 'q') {
         int entry;
         if (isdigit(c) && (entry = int(c - '0')) <= types.size()) {
-            wm->get_focused()->clear();
+            wm->get_focused()->clear_content();
             std::vector<gz::Recipe> rec = c_book.get_recipes(types[entry - 1]);
-            wm->get_focused()->display_refresh(print_recipe_info(rec[random_int(0, rec.size() - 1)]), 0, 0);
-        } else if (c == 'm') {
-            wm->get_focused()->clear();
-            wm->get_focused()->display_refresh(print_menu(types), 0, 0);
-        }
+            wm->get_focused()->display_refresh(print_recipe_info(rec[random_int(0, rec.size() - 1)]), 1, 1);
+        } 
     }
 
     return 0;

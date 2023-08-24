@@ -48,20 +48,21 @@ class WindowManager {
          for (auto& p : windows_) {
              // pulizia finestra
              std::string cont = p.second->content();
-             bool hb = p.second-> has_border();
-             p.second->clear(); // pulisco tutto
+             p.second->clear_content();
              // ridisegno la finestra
              p.second->resize(p.second->height(), p.second->length());
-             if (hb) p.second->set_border();
-             if (!cont.empty()) p.second->display(cont, 0, 0);
-             p.second->refresh();
+             if (p.second->has_border())  {
+                 p.second->display_refresh(cont, 1, 1);
+             } else {
+                 p.second->display_refresh(cont, 0, 0);
+             }
          }
      }
 
      ~WindowManager() { endwin(); }
 
  private:
-     WindowManager() { initscr(); setlocale(LC_ALL, ""); noecho(); }
+     WindowManager() { initscr(); }
      static std::shared_ptr<WindowManager> instance_;
      static std::map<std::string, std::shared_ptr<Window>> windows_;
      static std::shared_ptr<Window> focused_;
