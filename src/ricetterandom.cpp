@@ -24,13 +24,13 @@ namespace gz = giallozafferano;
 const std::string kRecipesDirsPaths = "./recipesDirsPaths.txt";
 
 // Comando per lanciare l'esecuzione del programama Go che scarica le ricette. (Compila ed esegue).
-constexpr char kDowloadRecipeCmd[] = "go run ../dowloadRecipes.go";
+const std::string kDowloadRecipeCmd = "../RicetteRandom";
 
 // Torna un numero random intero compreso nel range [min, max].
 int random_int(int min, int max) {
-    std::random_device rd; // random number from hardware
-    std::mt19937 gen(rd()); // seed the generator
-    std::uniform_int_distribution<> distr(min, max);  // define range
+    std::random_device rd;                           // random number from hardware
+    std::mt19937 gen(rd());                          // seed the generator
+    std::uniform_int_distribution<> distr(min, max); // define range
     return distr(gen);
 }
 
@@ -62,15 +62,22 @@ std::string print_recipe_info(const gz::Recipe& recipe) {
 }
 
 int main(int argc, char **argv) {
-    // gestione opt da cmd
+    // gestione opt
     int parse;
-    while ((parse = getopt(argc, argv, "d")) != -1) {
+    char* url = nullptr;
+    while ((parse = getopt(argc, argv, "d:")) != -1) {
         switch (parse) {
             // lancia il dowload delle ricette
             case 'd':
-                std::system(kDowloadRecipeCmd);
+                url = optarg;
+                break;
+            case '?':
+                return 1;
         }
     }
+    if (url) {
+        std::system((kDowloadRecipeCmd + " " + url).c_str());
+    } 
 
     // init book e deserializer
     gz::CookBook c_book{};
@@ -89,9 +96,9 @@ int main(int argc, char **argv) {
 
     // setup window manager
     std::shared_ptr<gz::WindowManager> wm = gz::WindowManager::get_instance();
-    setlocale(LC_ALL, ""); // per caratteri unicode
-    noecho(); // non mostra input utente
-    curs_set(0); // cursore non visibile
+    setlocale(LC_ALL, "");               // per caratteri unicode
+    noecho();                            // non mostra input utente
+    curs_set(0);                         // cursore non visibile
     signal(SIGWINCH, wm->handle_resize); // gestione ridimesionamento terminal
 
     // creazione finestre

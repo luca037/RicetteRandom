@@ -3,6 +3,7 @@ package giallozafferanoutils
 import (
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"golang.org/x/net/html"
@@ -13,7 +14,13 @@ type Recipe struct {
 	Name, Ingredients, Preparation string
 }
 
-// Effettua le richieste agli indirizzi url in urls e insrisce la testa della 
+// Verifica se la stringa passata è un url.
+func IsUrl(str string) bool {
+	u, err := url.Parse(str)
+	return err == nil && u.Scheme != "" && u.Host != ""
+}
+
+// Effettua le richieste agli indirizzi url in urls e insrisce la testa della
 // testa dell'albero html della pagina in heads.
 func MkeRequest(urls <-chan string, heads chan<- *html.Node) {
 	defer close(heads)
@@ -33,10 +40,10 @@ func MkeRequest(urls <-chan string, heads chan<- *html.Node) {
 	}
 }
 
-// Effettua il parse degli alberi html delle pagine contenenti gli url delle ricette. 
+// Effettua il parse degli alberi html delle pagine contenenti gli url delle ricette.
 // Tali alberi sono presenti in heads.
-// Inserisce gli url delle ricette in rUrls, in pUrls inserisce il l'url della 
-// prossima pagina contenente ricette. Se non sono presenti ulteriori ricette 
+// Inserisce gli url delle ricette in rUrls, in pUrls inserisce il l'url della
+// prossima pagina contenente ricette. Se non sono presenti ulteriori ricette
 // il canale viene chiuso. (Preorder boostrap)
 func ParseRecipesPage(heads <-chan *html.Node, rUrls, pUrls chan<- string) {
 	defer close(rUrls)
@@ -82,7 +89,7 @@ func getNodeAttrVal(node *html.Node, key string) string {
 	return "noVal"
 }
 
-// Effettua il parse degli alberi html corrispondenti alle pagine che contengono 
+// Effettua il parse degli alberi html corrispondenti alle pagine che contengono
 // nome, ingredienti e preparazione delle ricette. Tali alberi vengono passati
 // in heads, le ricette caricate in out. (Preorder boostrap)
 func ParseRecipe(heads <-chan *html.Node, out chan<- Recipe) {
