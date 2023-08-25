@@ -18,21 +18,23 @@ class CookBook {
     CookBook& operator=(const CookBook&) = default;
     CookBook& operator=(CookBook&&) = default;
 
-    int size() const { return recipes_.size(); }
-
-    // insert new recipe
+    // Inserisce una nuova ricetta.
     void insert(const std::string& type, const Recipe& r) { 
         recipes_[type].push_back(r);
     }
 
-    // insert multipe recipes
+    // Inserisce più ricette. Se esistono già delle ricette associate a type,
+    // queste vengono sostiutie.
     void insert(const std::string& type, const std::vector<Recipe>& rec) { 
         recipes_[type] = rec;
     }
 
+    // Ritorna le ricette associate a type.
     std::vector<Recipe> get_recipes(const std::string& type) {
         return recipes_[type];
     }
+
+    // Ritorna un vettore contenente le tipologie delle ricette.
     std::vector<std::string> get_recipes_types() const {
         std::vector<std::string> keys;
         for (const auto& e : recipes_)

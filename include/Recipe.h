@@ -17,14 +17,22 @@ class Recipe {
     Recipe& operator=(const Recipe&) = default;
     Recipe& operator=(Recipe&&) = default;
 
-    // non mod
+    // Nome ricetta.
     std::string name() const { return name_; }
+
+    // Ingredienti ricetta.
     std::string ingredients() const { return ingredients_; }
+
+    // Preparazione ricetta.
     std::string preparation() const { return preparation_; }
 
-    // mod
+    // Set name.
     void set_name(const std::string& name) { name_ = name; }
+
+    // Set ingredients.
     void set_ingredients(const std::string& ing) { ingredients_ = ing; }
+
+    // Set preparation.
     void set_preparation(const std::string& prep) { preparation_ = prep; }
 
     friend bool operator==(const Recipe& lhs, const Recipe& rhs) { 
@@ -39,7 +47,7 @@ class Recipe {
         return os << "{" 
             << std::quoted("Name") << ": " << std::quoted(r.name_) << ", "
             << std::quoted("Ingredients") << ": " << std::quoted(r.ingredients_) << ", "
-            << std::quoted("Preparation") << ": " << r.preparation_ 
+            << std::quoted("Preparation") << ": " << std::quoted(r.preparation_)
             << "}";
     }
 
