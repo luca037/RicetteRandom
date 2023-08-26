@@ -55,9 +55,9 @@ std::string print_menu(const std::vector<std::string>& opts) {
 // passata.
 std::string print_recipe_info(const gz::Recipe& recipe) {
     std::ostringstream oss;
-    oss << "Nome: " << recipe.name() << '\n' << '\n'
-        << " Ingredienti: " << recipe.ingredients() << '\n' << '\n'
-        << " Preparazione: " << recipe.preparation();
+    oss << "NOME: " << recipe.name() << '\n' << '\n'
+        << " INGREDIENTI: " << recipe.ingredients() << '\n' << '\n'
+        << " PREPARAZIONE: " << recipe.preparation();
     return oss.str();
 }
 
