@@ -105,7 +105,6 @@ int main(int argc, char **argv) {
     wm->create_win("info", 20, 40, 1, 142)->set_border();
     std::vector<std::string> types= c_book.get_recipes_types();
     wm->get_focused()->display_refresh(print_menu(types), 1, 1);
-
     wm->create_win("main", 39, 139, 1, 1)->set_border();
 
     // stampa random delle ricette

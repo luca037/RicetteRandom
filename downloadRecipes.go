@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"encoding/xml"
 	"log"
 	"os"
@@ -29,11 +30,21 @@ func getOutPathDir(url string) string {
 	s := strings.Split(url, "/")
 	var path string
 	if url[len(url)-1] == '/' {
-		path = "ricette/" + s[len(s)-2] + "/" // se termina con /
+		path = "ricette/" + s[len(s)-2] + "/"
 	} else {
-		path = "ricette/" + s[len(s)-1] + "/" // se termina con /
+		path = "ricette/" + s[len(s)-1] + "/"
 	}
 	return path
+}
+
+func findAbsPathInFile(file *os.File, path string) bool {
+    scanner := bufio.NewScanner(file)
+    for scanner.Scan() {
+        if scanner.Text() == path {
+            return true
+        }
+    }
+    return false
 }
 
 // Ritorna una stringa in cui non sono presenti i segni di punteggiatura specificati.
@@ -58,7 +69,7 @@ func rmSomePunctuation(in string, punc ...rune) string {
 }
 
 func main() {
-	// gestione argomenti
+	// gestione argomenti da riga di comando
 	if len(os.Args) != 2 {
 		log.Fatal("ERROR - Need exactly one argument (url)")
 	}
@@ -81,13 +92,16 @@ func main() {
 	go gzut.ParseRecipe(recipesHeads, recipesToSave)
 
 	// salvo dove si trova la cartella contenente i file xml (serve al programma in C++)
-	outPathDir := getOutPathDir(url)
-	file, err := os.OpenFile(kRECIPES_DIRS_PATHS, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(kRECIPES_DIRS_PATHS, os.O_CREATE, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer file.Close()
-	file.Write([]byte(os.Getenv("PWD") + "/" + outPathDir + "\n")) // abs path
+    // controllo se ho già salvato il path nel file
+	outPathDir := getOutPathDir(url) 
+    if !findAbsPathInFile(file, os.Getenv("PWD") + "/" + outPathDir) {
+        file.Write([]byte(os.Getenv("PWD") + "/" + outPathDir + "\n"))
+    }
 
 	// serializzazione ricette in file formato xml
 	if err := os.MkdirAll(outPathDir, os.ModePerm); err != nil {
