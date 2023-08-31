@@ -56,8 +56,8 @@ std::string print_menu(const std::vector<std::string>& opts) {
 std::string print_recipe_info(const gz::Recipe& recipe) {
     std::ostringstream oss;
     oss << "NOME: " << recipe.name() << '\n' << '\n'
-        << " INGREDIENTI: " << recipe.ingredients() << '\n' << '\n'
-        << " PREPARAZIONE: " << recipe.preparation();
+        << "INGREDIENTI: " << recipe.ingredients() << '\n' << '\n'
+        << "PREPARAZIONE: " << recipe.preparation();
     return oss.str();
 }
 
@@ -105,7 +105,9 @@ int main(int argc, char **argv) {
     wm->create_win("info", 20, 40, 1, 142)->set_border();
     std::vector<std::string> types= c_book.get_recipes_types();
     wm->get_focused()->display_refresh(print_menu(types), 1, 1);
-    wm->create_win("main", 39, 139, 1, 1)->set_border();
+    wm->create_win("border-main", 41, 141, 0, 0)->set_border();
+    wm->get_focused()->refresh();
+    wm->create_win("main", 38, 138, 1, 1);
 
     // stampa random delle ricette
     char c{};
@@ -114,7 +116,7 @@ int main(int argc, char **argv) {
         if (isdigit(c) && (entry = int(c - '0')) <= types.size()) {
             wm->get_focused()->clear_content();
             std::vector<gz::Recipe> rec = c_book.get_recipes(types[entry - 1]);
-            wm->get_focused()->display_refresh(print_recipe_info(rec[random_int(0, rec.size() - 1)]), 1, 1);
+            wm->get_focused()->display_refresh(print_recipe_info(rec[random_int(0, rec.size() - 1)]), 0, 0);
         } 
     }
 
