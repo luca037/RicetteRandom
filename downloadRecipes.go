@@ -92,7 +92,7 @@ func main() {
 	go gzut.ParseRecipe(recipesHeads, recipesToSave)
 
 	// salvo dove si trova la cartella contenente i file xml (serve al programma in C++)
-	file, err := os.OpenFile(kRECIPES_DIRS_PATHS, os.O_CREATE, 0644)
+	file, err := os.OpenFile(kRECIPES_DIRS_PATHS, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
