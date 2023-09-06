@@ -28,11 +28,11 @@ const kRECIPES_DIRS_PATHS = "recipesDirsPaths.txt"
 // Il nome viene costruito dal kURL.
 func getOutPathDir(url string) string {
 	s := strings.Split(url, "/")
-	var path string
+	var path string = os.Getenv("PWD") + "/";
 	if url[len(url)-1] == '/' {
-		path = "ricette/" + s[len(s)-2] + "/"
+		path += "ricette/" + strings.ToLower(s[len(s) - 2]) + "/"
 	} else {
-		path = "ricette/" + s[len(s)-1] + "/"
+		path += "ricette/" + strings.ToLower(s[len(s) - 1]) + "/"
 	}
 	return path
 }
@@ -99,8 +99,8 @@ func main() {
 	defer file.Close()
     // controllo se ho già salvato il path nel file
 	outPathDir := getOutPathDir(url) 
-    if !findAbsPathInFile(file, os.Getenv("PWD") + "/" + outPathDir) {
-        file.Write([]byte(os.Getenv("PWD") + "/" + outPathDir + "\n"))
+    if !findAbsPathInFile(file, outPathDir) {
+        file.Write([]byte(outPathDir))
     }
 
 	// serializzazione ricette in file formato xml
