@@ -47,6 +47,7 @@ std::string print_menu(const std::vector<std::string>& opts) {
     int i = 1;
     for (const std::string& opt : opts)
         menu << "    "  << std::to_string(i++) + " - " << opt << '\n';
+    menu << " Premi 'f' per cercare\n";
     menu << " Premi 'q' per uscire.";
     return menu.str();
 }
@@ -59,6 +60,35 @@ std::string print_recipe_info(const gz::Recipe& recipe) {
         << "INGREDIENTI: " << recipe.ingredients() << '\n' << '\n'
         << "PREPARAZIONE: " << recipe.preparation();
     return oss.str();
+}
+
+// Stampa su win una ricetta random del tipo specificato.
+void display_random_recipe(const std::shared_ptr<gz::Window>& win, const gz::CookBook& book, const std::string& type) {
+    std::vector<gz::Recipe> rec = book.get_recipes(type);
+    if (rec.empty()) return;
+    int rnd = random_int(0, rec.size() - 1);
+    win->clear_content();
+    win->display_refresh(print_recipe_info(rec[rnd]), 0, 0);
+}
+
+// Gestione ricerca ricetta e stampa risultati.
+void display_find_recipe(const std::shared_ptr<gz::Window>& win, const gz::CookBook& book) {
+    // setto il cursore visibile
+    echo();
+    curs_set(1);
+    // ricerca ricetta
+    win->clear_content();
+    win->display_refresh(">> inserire nome: ", 0, 0);
+    gz::Recipe found = book.find(win->get_str());
+    if (found != gz::Recipe{}) {
+        win->clear_content();
+        win->display_refresh(print_recipe_info(found), 0, 0);
+    } else {
+        win->display_refresh(">> ricetta non trovata.", 1, 0);
+    }
+    // resetto impostazioni
+    noecho();
+    curs_set(0);
 }
 
 int main(int argc, char **argv) {
@@ -102,22 +132,24 @@ int main(int argc, char **argv) {
     signal(SIGWINCH, wm->handle_resize); // gestione ridimesionamento terminal
 
     // creazione finestre
+    // finestra menu
     wm->create_win("info", 20, 40, 1, 142)->set_border();
-    std::vector<std::string> types= c_book.get_recipes_types();
-    wm->get_focused()->display_refresh(print_menu(types), 1, 1);
+    wm->get_focused()->display_refresh(print_menu(c_book.get_recipes_types()), 1, 1);
+
     wm->create_win("border-main", 41, 141, 0, 0)->set_border();
     wm->get_focused()->refresh();
     wm->create_win("main", 38, 138, 1, 1);
 
     // stampa random delle ricette
-    char c{};
-    while ((c = wm->get_focused()->get_ch()) != 'q') {
-        int entry;
-        if (isdigit(c) && (entry = int(c - '0')) <= types.size()) {
-            wm->get_focused()->clear_content();
-            std::vector<gz::Recipe> rec = c_book.get_recipes(types[entry - 1]);
-            wm->get_focused()->display_refresh(print_recipe_info(rec[random_int(0, rec.size() - 1)]), 0, 0);
-        } 
+    std::vector<std::string> types = c_book.get_recipes_types();
+    char input{};
+    while ((input = wm->get_focused()->get_ch()) != 'q') {
+        int index = int(input - '0');
+        if (isdigit(input) && index <= types.size() && index > 0) {
+            display_random_recipe(wm->get_focused(), c_book, types[index - 1]);
+        } else if (input =='f') {
+            display_find_recipe(wm->get_focused(), c_book);
+        }
     }
 
     return 0;

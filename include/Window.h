@@ -79,8 +79,15 @@ class Window {
         refresh(); 
     }
 
-    // Input untente.
+    // Input untente: ritorna il carattere inserito.
     char get_ch() const { return wgetch(win_); }
+
+    // Input utente: ritorna la stringa inserita.
+    std::string get_str() const {
+        char str[256];
+        wgetnstr(win_, str, sizeof(str));
+        return str;
+    }
 
     // Ridimensiona la finestra.
     void resize(int y, int x) {

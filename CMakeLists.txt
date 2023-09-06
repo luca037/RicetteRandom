@@ -15,6 +15,7 @@ add_library(Ricette
     src/Window.cpp
     include/CookBook.h
     include/Recipe.h
+    src/Recipe.cpp
     include/XmlRecipeDeserializer.h
     src/XmlRecipeDeserializer.cpp
     include/WindowManager.h

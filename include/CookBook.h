@@ -2,8 +2,10 @@
 #define COOKBOOK_H
 
 #include "Recipe.h"
+#include <algorithm>
 #include <ostream>
 #include <map>
+#include <stdexcept>
 #include <vector>
 #include <string>
 
@@ -29,9 +31,11 @@ class CookBook {
         recipes_[type] = rec;
     }
 
-    // Ritorna le ricette associate a type.
-    std::vector<Recipe> get_recipes(const std::string& type) {
-        return recipes_[type];
+    // Ritorna una copia delle ricette associate a type.
+    std::vector<Recipe> get_recipes(const std::string& type) const {
+        try { return recipes_.at(type); } 
+        catch (const std::out_of_range& e) { }
+        return {};
     }
 
     // Ritorna un vettore contenente le tipologie delle ricette.
@@ -40,6 +44,17 @@ class CookBook {
         for (const auto& e : recipes_)
             keys.push_back(e.first);
         return keys;
+    }
+
+    // Ricerca la ricetta per nome. Se non è presente nessuna ricetta torna una 
+    // ricetta vuota.
+    Recipe find(const std::string name) const {
+        for (auto const p : recipes_) {
+            std::vector<Recipe>::const_iterator it = std::find(p.second.begin(), p.second.end(), Recipe{name});
+            if (it != p.second.end())
+                return *it;
+        }
+        return Recipe{};
     }
 
     ~CookBook() = default;

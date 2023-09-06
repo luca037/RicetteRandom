@@ -36,11 +36,11 @@ class Recipe {
     void set_preparation(const std::string& prep) { preparation_ = prep; }
 
     friend bool operator==(const Recipe& lhs, const Recipe& rhs) { 
-        return lhs.name() == rhs.name(); 
+        return tolower(lhs.name()) == tolower(rhs.name());
     }
 
     friend bool operator!=(const Recipe& lhs, const Recipe& rhs) { 
-        return lhs.name() != rhs.name(); 
+        return tolower(lhs.name()) != tolower(rhs.name());
     }
 
     friend std::ostream& operator<<(std::ostream& os, const Recipe& r) {
@@ -56,6 +56,7 @@ class Recipe {
     std::string name_;
     std::string ingredients_;
     std::string preparation_;
+    static std::string tolower(const std::string& s);
 };
 
 
