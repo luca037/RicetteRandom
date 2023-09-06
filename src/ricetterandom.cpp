@@ -26,6 +26,14 @@ const std::string kRecipesDirsPaths = "./recipesDirsPaths.txt";
 // Comando per lanciare l'esecuzione del programama Go che scarica le ricette. (Compila ed esegue).
 const std::string kDowloadRecipeCmd = "../RicetteRandom";
 
+// Opzioni applicazione.
+const std::string kMenu{
+    "Scegli una delle seguenti opzioni:\n \
+    1 - Ricetta random; \n \
+    2 - Ricerca ricetta;\n \
+    q - Per uscire."
+};
+
 // Torna un numero random intero compreso nel range [min, max].
 int random_int(int min, int max) {
     std::random_device rd;                           // random number from hardware
@@ -40,15 +48,14 @@ std::string parent_name(const fs::path& path) {
     return path.parent_path().string().substr(pos + 1);
 }
 
-// Torna una striga contenente il menu da stampare ad output.
-std::string print_menu(const std::vector<std::string>& opts) {
+// Torna una striga contenente il menu delle portate.
+// La numerazione delle opzioni parte dall'indice 1.
+std::string print_types_menu(const std::vector<std::string>& opts) {
     std::ostringstream menu;
     menu << "Scegli una delle seguenti portate:\n";
     int i = 1;
     for (const std::string& opt : opts)
         menu << "    "  << std::to_string(i++) + " - " << opt << '\n';
-    menu << " Premi 'f' per cercare\n";
-    menu << " Premi 'q' per uscire.";
     return menu.str();
 }
 
@@ -63,16 +70,24 @@ std::string print_recipe_info(const gz::Recipe& recipe) {
 }
 
 // Stampa su win una ricetta random del tipo specificato.
-void display_random_recipe(const std::shared_ptr<gz::Window>& win, const gz::CookBook& book, const std::string& type) {
-    std::vector<gz::Recipe> rec = book.get_recipes(type);
-    if (rec.empty()) return;
-    int rnd = random_int(0, rec.size() - 1);
+void random_recipe_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBook& book) {
+    // stampa menu di selezione portata
+    std::vector<std::string> types_list = book.get_recipes_types();
     win->clear_content();
-    win->display_refresh(print_recipe_info(rec[rnd]), 0, 0);
+    win->display_refresh(print_types_menu(types_list), 0, 0);
+    int selected = int(win->get_ch() - '0');
+    if (selected > types_list.size() || selected <= 0) 
+        return;
+    // stampa ricetta random tra quelle
+    std::vector<gz::Recipe> rec = book.get_recipes(types_list[selected - 1]);
+    if (rec.empty())
+        return; 
+    win->clear_content();
+    win->display_refresh(print_recipe_info(rec[random_int(0, rec.size() - 1)]), 0, 0);
 }
 
 // Gestione ricerca ricetta e stampa risultati.
-void display_find_recipe(const std::shared_ptr<gz::Window>& win, const gz::CookBook& book) {
+void find_recipe_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBook& book) {
     // setto il cursore visibile
     echo();
     curs_set(1);
@@ -133,22 +148,21 @@ int main(int argc, char **argv) {
 
     // creazione finestre
     // finestra menu
-    wm->create_win("info", 20, 40, 1, 142)->set_border();
-    wm->get_focused()->display_refresh(print_menu(c_book.get_recipes_types()), 1, 1);
+    wm->create_win("menu", 20, 40, 0, 142)->set_border();
+    wm->get_focused()->display_refresh(kMenu, 1, 1);
 
-    wm->create_win("border-main", 41, 141, 0, 0)->set_border();
+    // finestra principale
+    wm->create_win("border-main", 41, 141, 0, 0)->set_border(); // funge solo da bordo
     wm->get_focused()->refresh();
     wm->create_win("main", 38, 138, 1, 1);
 
     // stampa random delle ricette
-    std::vector<std::string> types = c_book.get_recipes_types();
     char input{};
     while ((input = wm->get_focused()->get_ch()) != 'q') {
-        int index = int(input - '0');
-        if (isdigit(input) && index <= types.size() && index > 0) {
-            display_random_recipe(wm->get_focused(), c_book, types[index - 1]);
-        } else if (input =='f') {
-            display_find_recipe(wm->get_focused(), c_book);
+        if (input == '1') {
+            random_recipe_opt(wm->get_focused(), c_book);
+        } else if (input =='2') {
+            find_recipe_opt(wm->get_focused(), c_book);
         }
     }
 
