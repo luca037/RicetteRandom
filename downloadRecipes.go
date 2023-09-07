@@ -28,23 +28,23 @@ const kRECIPES_DIRS_PATHS = "recipesDirsPaths.txt"
 // Il nome viene costruito dal kURL.
 func getOutPathDir(url string) string {
 	s := strings.Split(url, "/")
-	var path string = os.Getenv("PWD") + "/";
+	var path string = os.Getenv("PWD") + "/"
 	if url[len(url)-1] == '/' {
-		path += "ricette/" + strings.ToLower(s[len(s) - 2]) + "/"
+		path += "ricette/" + strings.ToLower(s[len(s)-2]) + "/"
 	} else {
-		path += "ricette/" + strings.ToLower(s[len(s) - 1]) + "/"
+		path += "ricette/" + strings.ToLower(s[len(s)-1]) + "/"
 	}
 	return path
 }
 
 func findAbsPathInFile(file *os.File, path string) bool {
-    scanner := bufio.NewScanner(file)
-    for scanner.Scan() {
-        if scanner.Text() == path {
-            return true
-        }
-    }
-    return false
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		if scanner.Text() == path {
+			return true
+		}
+	}
+	return false
 }
 
 // Ritorna una stringa in cui non sono presenti i segni di punteggiatura specificati.
@@ -97,11 +97,11 @@ func main() {
 		log.Fatal(err)
 	}
 	defer file.Close()
-    // controllo se ho già salvato il path nel file
-	outPathDir := getOutPathDir(url) 
-    if !findAbsPathInFile(file, outPathDir) {
-        file.Write([]byte(outPathDir))
-    }
+	// controllo se ho già salvato il path nel file
+	outPathDir := getOutPathDir(url)
+	if !findAbsPathInFile(file, outPathDir) {
+		file.Write([]byte(outPathDir + "\n"))
+	}
 
 	// serializzazione ricette in file formato xml
 	if err := os.MkdirAll(outPathDir, os.ModePerm); err != nil {
