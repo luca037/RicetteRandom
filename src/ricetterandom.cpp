@@ -10,7 +10,6 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include <cctype>
 #include <iostream>
 
 #include "../include/XmlRecipeDeserializer.h"
@@ -31,7 +30,10 @@ const std::string kMenu{
     "Scegli una delle seguenti opzioni:\n \
     1 - Ricetta random; \n \
     2 - Ricerca ricetta;\n \
+    c - Pulisci output;\n \
+    n - Naviga ricettario;\n \
     q - Per uscire."
+
 };
 
 // Torna un numero random intero compreso nel range [min, max].
@@ -53,7 +55,7 @@ std::string parent_name(const fs::path& path) {
 std::string print_types_menu(const std::vector<std::string>& opts) {
     std::ostringstream menu;
     menu << "Scegli una delle seguenti portate:\n";
-    int i = 1;
+    int i{1};
     for (const std::string& opt : opts)
         menu << "    "  << std::to_string(i++) + " - " << opt << '\n';
     return menu.str();
@@ -72,12 +74,12 @@ std::string print_recipe_info(const gz::Recipe& recipe) {
 // Stampa su win una ricetta random del tipo specificato.
 void random_recipe_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBook& book) {
     // stampa menu di selezione portata
-    std::vector<std::string> types_list = book.get_recipes_types();
+    static std::vector<std::string> types_list{book.get_recipes_types()};
     win->clear_content();
     win->display_refresh(print_types_menu(types_list), 0, 0);
-    int selected = int(win->get_ch() - '0');
-    if (selected > types_list.size() || selected <= 0) 
-        return;
+    int selected{};
+    while (selected > types_list.size() || selected <= 0)
+        selected = int(win->get_ch() - '0');
     // stampa ricetta random tra quelle
     std::vector<gz::Recipe> rec = book.get_recipes(types_list[selected - 1]);
     if (rec.empty())
@@ -106,10 +108,48 @@ void find_recipe_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBook&
     curs_set(0);
 }
 
+// Gestione menu di navigazione.
+void navitate_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBook& book) {
+    static std::vector<std::string> types_list{book.get_recipes_types()};
+    // display menu iniziale
+    win->clear_content();
+    win->display(print_types_menu(types_list), 0, 0);
+    // gestione movimento menu
+    int cu_x{2}, cu_y{1}; // cursor position
+    win->display_refresh(">", cu_y, cu_x);
+    for (char input{}; input != 'q'; input = win->get_ch()) {
+        switch (input) {
+            case 'l': // right
+                win->clear_content();
+                for (const auto& r : book.get_recipes(types_list[cu_y - 1])) {
+                    win->display_refresh(print_recipe_info(r), 0, 0);
+                    break;
+                }
+                break;
+            case 'h': // left
+                win->clear_content();
+                win->display(print_types_menu(types_list), 0, 0);
+                win->display_refresh(">", cu_y, cu_x);
+                break;
+            case 'k': // up
+                win->display(" ", cu_y, cu_x);
+                cu_y = cu_y == 1 ? types_list.size() : cu_y - 1;
+                win->display_refresh(">", cu_y, cu_x);
+                break;
+            case 'j': // down
+                win->display(" ", cu_y, cu_x);
+                cu_y = cu_y == types_list.size() ? 1 : cu_y + 1;
+                win->display_refresh(">", cu_y, cu_x);
+                break;
+        }
+    }
+    win->clear_content();
+}
+
 int main(int argc, char **argv) {
     // gestione opt
     int parse;
-    char* url = nullptr;
+    char* url{nullptr};
     while ((parse = getopt(argc, argv, "d:")) != -1) {
         switch (parse) {
             // lancia il dowload delle ricette
@@ -156,13 +196,22 @@ int main(int argc, char **argv) {
     wm->get_focused()->refresh();
     wm->create_win("main", 38, 138, 1, 1);
 
-    // stampa random delle ricette
-    char input{};
-    while ((input = wm->get_focused()->get_ch()) != 'q') {
-        if (input == '1') {
-            random_recipe_opt(wm->get_focused(), c_book);
-        } else if (input =='2') {
-            find_recipe_opt(wm->get_focused(), c_book);
+    // start applicazione
+    for (char input{}; input != 'q'; input = wm->get_focused()->get_ch()) {
+        switch (input) {
+            case '1':
+                random_recipe_opt(wm->get_focused(), c_book);
+                break;
+            case '2':
+                find_recipe_opt(wm->get_focused(), c_book);
+                break;
+            case 'c':
+                wm->get_focused()->clear_content();
+                break;
+            case 'n':
+                navitate_opt(wm->get_focused(), c_book);
+                break;
+            default: continue;
         }
     }
 
