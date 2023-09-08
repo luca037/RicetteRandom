@@ -32,7 +32,7 @@ const std::string kMenu{
     2 - Ricerca ricetta;\n \
     c - Pulisci output;\n \
     n - Naviga ricettario;\n \
-    q - Per uscire."
+    q - Per uscire/annullare."
 
 };
 
@@ -52,40 +52,110 @@ std::string parent_name(const fs::path& path) {
 
 // Torna una striga contenente il menu delle portate.
 // La numerazione delle opzioni parte dall'indice 1.
-std::string print_types_menu(const std::vector<std::string>& opts) {
+void display_types_menu(const std::shared_ptr<gz::Window>& win, const std::vector<std::string>& opts, int y, int x) {
     std::ostringstream menu;
     menu << "Scegli una delle seguenti portate:\n";
     int i{1};
     for (const std::string& opt : opts)
         menu << "    "  << std::to_string(i++) + " - " << opt << '\n';
-    return menu.str();
+    win->display_refresh(menu.str(), y, x);
 }
 
-// Torna un stringa formattata contenente le informazioni riguardianti la ricetta 
-// passata.
-std::string print_recipe_info(const gz::Recipe& recipe) {
+// Stampa le informazioni della ricetta sulla finestra passata partendo dalle 
+// coordinate passate.
+void display_recipe_info(const std::shared_ptr<gz::Window>& win, const gz::Recipe& recipe, int y, int x) {
     std::ostringstream oss;
     oss << "NOME: " << recipe.name() << '\n' << '\n'
         << "INGREDIENTI: " << recipe.ingredients() << '\n' << '\n'
         << "PREPARAZIONE: " << recipe.preparation();
-    return oss.str();
+    win->display_refresh(oss.str(), y, x);
 }
 
-// Stampa su win una ricetta random del tipo specificato.
+// Gestine cursore per navigare i menu. Il cursore si muove verso lungo le ordinate
+// usando j, k (vim). Per confermare la scelta si utilizza 'l'.
+// Il valore tornato corrisponde alla posizione (ordinate) del cursore, altrimenti:
+//     -1 per uscire dal menu
+//     -2 per tornare indietro
+int manage_cursor(const std::shared_ptr<gz::Window>& win, int start_y, int start_x, int max_y, int min_y) {
+    static const std::string cur{">"};
+    int cur_y{start_y};
+    win->display_refresh(cur, cur_y, start_x);
+    // gestione movimento
+    for (char input{}; input != 'q'; input = win->get_ch()) {
+        switch (input) {
+            case 'l': // right (select item)
+                win->display_refresh(" ", cur_y, start_x);
+                return cur_y;
+                break;
+            case 'h': // left (go back)
+                win->display_refresh(" ", cur_y, start_x);
+                return -2;
+                break;
+            case 'k': // up
+                win->display(" ", cur_y, start_x);
+                cur_y = cur_y == min_y ? max_y : cur_y - 1;
+                win->display_refresh(">", cur_y, start_x);
+                break;
+            case 'j': // down
+                win->display(" ", cur_y, start_x);
+                cur_y = cur_y == max_y ? min_y : cur_y + 1;
+                win->display_refresh(">", cur_y, start_x);
+                break;
+            defalut: continue;
+        }
+    }
+    win->display_refresh(" ", cur_y, start_x);
+    return -1;
+}
+
+// Gestione opzione ricetta random.
 void random_recipe_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBook& book) {
+    static const std::vector<std::string> types_list{book.get_recipes_types()};
     // stampa menu di selezione portata
-    static std::vector<std::string> types_list{book.get_recipes_types()};
     win->clear_content();
-    win->display_refresh(print_types_menu(types_list), 0, 0);
-    int selected{};
-    while (selected > types_list.size() || selected <= 0)
-        selected = int(win->get_ch() - '0');
-    // stampa ricetta random tra quelle
-    std::vector<gz::Recipe> rec = book.get_recipes(types_list[selected - 1]);
-    if (rec.empty())
-        return; 
+    display_types_menu(win, types_list, 0, 0);
+    int selected{manage_cursor(win, 1, 2, types_list.size(), 1)};
+    // stampa ricetta random
+    if (selected > 0) {
+        std::vector<gz::Recipe> rec = book.get_recipes(types_list[selected - 1]);
+        win->clear_content();
+        display_recipe_info(win, rec[random_int(0, rec.size() - 1)], 0, 0);
+    }
+}
+
+// Gestione menu di navigazione.
+void navitate_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBook& book) {
+    static const std::vector<std::string> types_list{book.get_recipes_types()};
+    // display menu iniziale
     win->clear_content();
-    win->display_refresh(print_recipe_info(rec[random_int(0, rec.size() - 1)]), 0, 0);
+    display_types_menu(win, types_list, 0, 0);
+    // gestione navigazione
+    int input;
+    while ((input = manage_cursor(win, 1, 2, types_list.size(), 1)) > 0 ) {
+        // stampa ricetta della portata selezionata
+        std::vector<gz::Recipe> rec{book.get_recipes(types_list[input - 1])};
+        win->clear_content();
+        display_recipe_info(win, rec[0], 0, 0);
+        for (int c{}, i{}; c != 'h'; c = win->get_ch()) {
+            if (char(c) == 'j') {
+                if (i + 1 < rec.size()) { // stampa ricetta successiva
+                    ++i;
+                    win->clear_content();
+                    display_recipe_info(win, rec[i], 0, 0);
+                }
+            } else if (char(c) == 'k') {
+                if (i - 1 > 0) { // stampa ricetta precedente
+                    --i;
+                    win->clear_content();
+                    display_recipe_info(win, rec[i], 0, 0);
+                }
+            }
+        }
+        // display menu iniziale
+        win->clear_content();
+        display_types_menu(win, types_list, 0, 0);
+    }
+    win->clear();
 }
 
 // Gestione ricerca ricetta e stampa risultati.
@@ -99,51 +169,13 @@ void find_recipe_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBook&
     gz::Recipe found = book.find(win->get_str());
     if (found != gz::Recipe{}) {
         win->clear_content();
-        win->display_refresh(print_recipe_info(found), 0, 0);
+        display_recipe_info(win, found, 0, 0);
     } else {
         win->display_refresh(">> ricetta non trovata.", 1, 0);
     }
     // resetto impostazioni
     noecho();
     curs_set(0);
-}
-
-// Gestione menu di navigazione.
-void navitate_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBook& book) {
-    static std::vector<std::string> types_list{book.get_recipes_types()};
-    // display menu iniziale
-    win->clear_content();
-    win->display(print_types_menu(types_list), 0, 0);
-    // gestione movimento menu
-    int cu_x{2}, cu_y{1}; // cursor position
-    win->display_refresh(">", cu_y, cu_x);
-    for (char input{}; input != 'q'; input = win->get_ch()) {
-        switch (input) {
-            case 'l': // right
-                win->clear_content();
-                for (const auto& r : book.get_recipes(types_list[cu_y - 1])) {
-                    win->display_refresh(print_recipe_info(r), 0, 0);
-                    break;
-                }
-                break;
-            case 'h': // left
-                win->clear_content();
-                win->display(print_types_menu(types_list), 0, 0);
-                win->display_refresh(">", cu_y, cu_x);
-                break;
-            case 'k': // up
-                win->display(" ", cu_y, cu_x);
-                cu_y = cu_y == 1 ? types_list.size() : cu_y - 1;
-                win->display_refresh(">", cu_y, cu_x);
-                break;
-            case 'j': // down
-                win->display(" ", cu_y, cu_x);
-                cu_y = cu_y == types_list.size() ? 1 : cu_y + 1;
-                win->display_refresh(">", cu_y, cu_x);
-                break;
-        }
-    }
-    win->clear_content();
 }
 
 int main(int argc, char **argv) {
