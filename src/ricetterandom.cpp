@@ -54,7 +54,6 @@ std::string parent_name(const fs::path& path) {
 // La numerazione delle opzioni parte dall'indice 1.
 void display_types_menu(const std::shared_ptr<gz::Window>& win, const std::vector<std::string>& opts, int y, int x) {
     std::ostringstream menu;
-    menu << "Scegli una delle seguenti portate:\n";
     int i{1};
     for (const std::string& opt : opts)
         menu << "    "  << std::to_string(i++) + " - " << opt << '\n';
@@ -72,10 +71,11 @@ void display_recipe_info(const std::shared_ptr<gz::Window>& win, const gz::Recip
 }
 
 // Gestine cursore per navigare i menu. Il cursore si muove verso lungo le ordinate
-// usando j, k (vim). Per confermare la scelta si utilizza 'l'.
-// Il valore tornato corrisponde alla posizione (ordinate) del cursore, altrimenti:
-//     -1 per uscire dal menu
-//     -2 per tornare indietro
+// usando j, k (vim). Per confermare la scelta si utilizza l, in tal caso viene 
+// tornato il valore corrisponde alla posizione (ordinate) del cursore.
+// Altrimenti, se premo:
+//     q (annullare) -> torna -1
+//     h (tornare inietro) -> torna -2
 int manage_cursor(const std::shared_ptr<gz::Window>& win, int start_y, int start_x, int max_y, int min_y) {
     static const std::string cur{">"};
     int cur_y{start_y};
@@ -113,7 +113,8 @@ void random_recipe_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBoo
     static const std::vector<std::string> types_list{book.get_recipes_types()};
     // stampa menu di selezione portata
     win->clear_content();
-    display_types_menu(win, types_list, 0, 0);
+    win->display("- Random - Scegli una delle seguenti portate:", 0, 0);
+    display_types_menu(win, types_list, 1, 0);
     int selected{manage_cursor(win, 1, 2, types_list.size(), 1)};
     // stampa ricetta random
     if (selected > 0) {
@@ -128,7 +129,8 @@ void navitate_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBook& bo
     static const std::vector<std::string> types_list{book.get_recipes_types()};
     // display menu iniziale
     win->clear_content();
-    display_types_menu(win, types_list, 0, 0);
+    win->display("- Navigazione -", 0, 0);
+    display_types_menu(win, types_list, 1, 0);
     // gestione navigazione
     int input;
     while ((input = manage_cursor(win, 1, 2, types_list.size(), 1)) > 0 ) {
@@ -151,31 +153,45 @@ void navitate_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBook& bo
                 }
             }
         }
-        // display menu iniziale
+        // display menu iniziale (se torno indietro dalla selezione0)
         win->clear_content();
-        display_types_menu(win, types_list, 0, 0);
+    win->display("- Navigazione -", 0, 0);
+        display_types_menu(win, types_list, 1, 0);
     }
     win->clear();
 }
 
 // Gestione ricerca ricetta e stampa risultati.
 void find_recipe_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBook& book) {
-    // setto il cursore visibile
+    // inizializzo ambiente
     echo();
     curs_set(1);
-    // ricerca ricetta
     win->clear_content();
     win->display_refresh(">> inserire nome: ", 0, 0);
-    gz::Recipe found = book.find(win->get_str());
-    if (found != gz::Recipe{}) {
-        win->clear_content();
-        display_recipe_info(win, found, 0, 0);
-    } else {
-        win->display_refresh(">> ricetta non trovata.", 1, 0);
+    // ricerca ricetta
+    int y{};
+    std::string input;
+    while ((input = win->get_str()) != "q") {
+        gz::Recipe found;
+        if (( found = book.find(input)) != gz::Recipe{}) {
+            win->clear_content();
+            noecho();
+            display_recipe_info(win, found, 0, 0);
+            for (char c{}; c != 'h'; c = win->get_ch()) /* wait */;
+            win->clear_content();
+            win->display_refresh(">> inserire nome: ", 0, 0);
+            y = 0;
+            echo();
+        } else {
+            if (y + 2 > win->height()) { win->clear_content(); y = -1; }
+            win->display("error:  ricetta non trovata.", ++y, 0);
+            win->display_refresh(">> inserire nome: ", ++y, 0);
+        }
     }
-    // resetto impostazioni
+    // resetto impostazioni di partenza
     noecho();
     curs_set(0);
+    win->clear_content();
 }
 
 int main(int argc, char **argv) {
@@ -220,11 +236,11 @@ int main(int argc, char **argv) {
 
     // creazione finestre
     // finestra menu
-    wm->create_win("menu", 20, 40, 0, 142)->set_border();
+    wm->create_win("menu", 8, 40, 0, 142)->set_border();
     wm->get_focused()->display_refresh(kMenu, 1, 1);
 
     // finestra principale
-    wm->create_win("border-main", 41, 141, 0, 0)->set_border(); // funge solo da bordo
+    wm->create_win("border-main", 40, 140, 0, 0)->set_border(); // funge solo da bordo
     wm->get_focused()->refresh();
     wm->create_win("main", 38, 138, 1, 1);
 
