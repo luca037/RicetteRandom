@@ -146,7 +146,7 @@ void navitate_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBook& bo
                     display_recipe_info(win, rec[i], 0, 0);
                 }
             } else if (char(c) == 'k') {
-                if (i - 1 > 0) { // stampa ricetta precedente
+                if (i - 1 > -1) { // stampa ricetta precedente
                     --i;
                     win->clear_content();
                     display_recipe_info(win, rec[i], 0, 0);
