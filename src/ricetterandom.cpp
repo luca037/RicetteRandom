@@ -115,13 +115,19 @@ void random_recipe_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBoo
     win->clear_content();
     win->display("- Random - Scegli una delle seguenti portate:", 0, 0);
     display_types_menu(win, types_list, 1, 0);
-    int selected{manage_cursor(win, 1, 2, types_list.size(), 1)};
     // stampa ricetta random
-    if (selected > 0) {
+    int selected{1};
+    while ((selected = manage_cursor(win, selected, 2, types_list.size(), 1)) > 0) {
         std::vector<gz::Recipe> rec = book.get_recipes(types_list[selected - 1]);
         win->clear_content();
         display_recipe_info(win, rec[random_int(0, rec.size() - 1)], 0, 0);
+        // aspetto che che l'utente torni indietro dalla selezione
+        for (char c{}; c != 'h'; c = win->get_ch()) /* wait */;
+        win->clear_content();
+        win->display("- Random - Scegli una delle seguenti portate:", 0, 0);
+        display_types_menu(win, types_list, 1, 0);
     }
+    win->clear();
 }
 
 // Gestione menu di navigazione.
@@ -132,8 +138,8 @@ void navitate_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBook& bo
     win->display("- Navigazione -", 0, 0);
     display_types_menu(win, types_list, 1, 0);
     // gestione navigazione
-    int input;
-    while ((input = manage_cursor(win, 1, 2, types_list.size(), 1)) > 0 ) {
+    int input{1};
+    while ((input = manage_cursor(win, input, 2, types_list.size(), 1)) > 0 ) {
         // stampa ricetta della portata selezionata
         std::vector<gz::Recipe> rec{book.get_recipes(types_list[input - 1])};
         win->clear_content();
@@ -153,9 +159,9 @@ void navitate_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBook& bo
                 }
             }
         }
-        // display menu iniziale (se torno indietro dalla selezione0)
+        // display menu iniziale (se torno indietro dalla selezione)
         win->clear_content();
-    win->display("- Navigazione -", 0, 0);
+        win->display("- Navigazione -", 0, 0);
         display_types_menu(win, types_list, 1, 0);
     }
     win->clear();
