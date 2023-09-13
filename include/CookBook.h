@@ -4,13 +4,15 @@
 #include "Recipe.h"
 #include <algorithm>
 #include <ostream>
-#include <map>
 #include <stdexcept>
+#include <map>
 #include <vector>
 #include <string>
 
 namespace giallozafferano {
 
+
+// Classe che rappresenta un libro di ricette.
 class CookBook {
  public:
     CookBook() {}
@@ -22,19 +24,26 @@ class CookBook {
 
     // Inserisce una nuova ricetta.
     void insert(const std::string& type, const Recipe& r) { 
-        recipes_[type].push_back(r);
-    }
-
-    // Inserisce più ricette. Se esistono già delle ricette associate a type,
-    // queste vengono sostiutie.
-    void insert(const std::string& type, const std::vector<Recipe>& rec) { 
-        recipes_[type] = rec;
+        auto it = std::find_if(recipes_.begin(), recipes_.end(),
+                [&type](const std::pair<std::string, std::map<std::string, Recipe>>& p) {
+                    return p.first == type;
+                });
+        if (it != recipes_.end())
+            it->second[r.name()] = r;
+        else
+            recipes_.push_back(
+                    std::make_pair(type, std::map<std::string, Recipe>{{r.name(), r}})
+            );
     }
 
     // Ritorna una copia delle ricette associate a type.
-    std::vector<Recipe> get_recipes(const std::string& type) const {
-        try { return recipes_.at(type); } 
-        catch (const std::out_of_range& e) { }
+    std::map<std::string, Recipe> get_recipes(const std::string& type) const {
+        auto it = std::find_if(recipes_.begin(), recipes_.end(),
+                [&type](const std::pair<std::string, std::map<std::string, Recipe>>& p) {
+                    return p.first == type;
+                });
+        if (it != recipes_.end())
+            return it->second;
         return {};
     }
 
@@ -48,11 +57,11 @@ class CookBook {
 
     // Ricerca la ricetta per nome. Se non è presente nessuna ricetta torna una 
     // ricetta vuota.
-    Recipe find(const std::string name) const {
-        for (auto const p : recipes_) {
-            std::vector<Recipe>::const_iterator it = std::find(p.second.begin(), p.second.end(), Recipe{name});
-            if (it != p.second.end())
-                return *it;
+    Recipe find(const std::string& name) const {
+        for (const auto& p : recipes_) {
+           auto it = p.second.find(name);
+           if (it != p.second.end())
+               return it->second;
         }
         return Recipe{};
     }
@@ -60,7 +69,7 @@ class CookBook {
     ~CookBook() = default;
 
  private:
-    std::map<std::string, std::vector<Recipe>> recipes_;
+    std::vector<std::pair<std::string, std::map<std::string, Recipe>>> recipes_;
 };
 
 } // end namespace

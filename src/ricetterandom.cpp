@@ -5,6 +5,7 @@
 #include <fstream>
 #include <bits/getopt_core.h>
 #include <cstdlib>
+#include <iterator>
 #include <random>
 #include <memory>
 #include <sstream>
@@ -28,8 +29,8 @@ const std::string kDowloadRecipeCmd = "../RicetteRandom";
 // Opzioni applicazione.
 const std::string kMenu{
     "Scegli una delle seguenti opzioni:\n \
-    1 - Ricetta random; \n \
-    2 - Ricerca ricetta;\n \
+    r - Ricetta random; \n \
+    f - Ricerca ricetta;\n \
     c - Pulisci output;\n \
     n - Naviga ricettario;\n \
     q - Per uscire/annullare."
@@ -80,6 +81,7 @@ int manage_cursor(const std::shared_ptr<gz::Window>& win, int start_y, int start
     static const std::string cur{">"};
     int cur_y{start_y};
     win->display_refresh(cur, cur_y, start_x);
+
     // gestione movimento
     for (char input{}; input != 'q'; input = win->get_ch()) {
         switch (input) {
@@ -111,16 +113,24 @@ int manage_cursor(const std::shared_ptr<gz::Window>& win, int start_y, int start
 // Gestione opzione ricetta random.
 void random_recipe_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBook& book) {
     static const std::vector<std::string> types_list{book.get_recipes_types()};
+
     // stampa menu di selezione portata
     win->clear_content();
     win->display("- Random - Scegli una delle seguenti portate:", 0, 0);
     display_types_menu(win, types_list, 1, 0);
+
     // stampa ricetta random
     int selected{1};
     while ((selected = manage_cursor(win, selected, 2, types_list.size(), 1)) > 0) {
-        std::vector<gz::Recipe> rec = book.get_recipes(types_list[selected - 1]);
+        // salvo le ricette della portata selezionata
+        std::map<std::string, gz::Recipe> rec{book.get_recipes(types_list[selected - 1])};
+
+        // stampa ricetta casuale
         win->clear_content();
-        display_recipe_info(win, rec[random_int(0, rec.size() - 1)], 0, 0);
+        auto it = rec.begin();
+        std::advance(it, random_int(0, rec.size() - 1));
+        display_recipe_info(win, it->second, 0, 0);
+
         // aspetto che che l'utente torni indietro dalla selezione
         for (char c{}; c != 'h'; c = win->get_ch()) /* wait */;
         win->clear_content();
@@ -131,34 +141,43 @@ void random_recipe_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBoo
 }
 
 // Gestione menu di navigazione.
-void navitate_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBook& book) {
+void navigate_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBook& book) {
     static const std::vector<std::string> types_list{book.get_recipes_types()};
+
     // display menu iniziale
     win->clear_content();
     win->display("- Navigazione -", 0, 0);
     display_types_menu(win, types_list, 1, 0);
+
     // gestione navigazione
     int input{1};
     while ((input = manage_cursor(win, input, 2, types_list.size(), 1)) > 0 ) {
-        // stampa ricetta della portata selezionata
-        std::vector<gz::Recipe> rec{book.get_recipes(types_list[input - 1])};
+        // salvo le ricette della portata selezionata
+        std::map<std::string, gz::Recipe> rec{book.get_recipes(types_list[input - 1])};
+
+        // stampa ricette 
         win->clear_content();
-        display_recipe_info(win, rec[0], 0, 0);
-        for (int c{}, i{}; c != 'h'; c = win->get_ch()) {
-            if (char(c) == 'j') {
-                if (i + 1 < rec.size()) { // stampa ricetta successiva
-                    ++i;
-                    win->clear_content();
-                    display_recipe_info(win, rec[i], 0, 0);
-                }
-            } else if (char(c) == 'k') {
-                if (i - 1 > -1) { // stampa ricetta precedente
-                    --i;
-                    win->clear_content();
-                    display_recipe_info(win, rec[i], 0, 0);
-                }
+        auto it = rec.begin();
+        display_recipe_info(win, it->second, 0, 0);
+        for (char c{}; c != 'h'; c = win->get_ch()) {
+            switch (c) {
+                case 'j':
+                    if (++it != rec.end()) {
+                        win->clear_content();
+                        display_recipe_info(win, it->second, 0, 0);
+                    }
+                    break;
+                case 'k':
+                    if (it != rec.begin()) {
+                        --it;
+                        win->clear_content();
+                        display_recipe_info(win, it->second, 0, 0);
+                    }
+                    break;
+                default: continue;
             }
         }
+
         // display menu iniziale (se torno indietro dalla selezione)
         win->clear_content();
         win->display("- Navigazione -", 0, 0);
@@ -174,8 +193,9 @@ void find_recipe_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBook&
     curs_set(1);
     win->clear_content();
     win->display_refresh(">> inserire nome: ", 0, 0);
+
     // ricerca ricetta
-    int y{};
+    int y{}; // ordinata corrente
     std::string input;
     while ((input = win->get_str()) != "q") {
         gz::Recipe found;
@@ -183,17 +203,21 @@ void find_recipe_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBook&
             win->clear_content();
             noecho();
             display_recipe_info(win, found, 0, 0);
+
+            // aspetto prima di tornare alla ricerca
             for (char c{}; c != 'h'; c = win->get_ch()) /* wait */;
             win->clear_content();
             win->display_refresh(">> inserire nome: ", 0, 0);
             y = 0;
             echo();
         } else {
+            // controllo se ho raggiunto il limite della finestra
             if (y + 2 > win->height()) { win->clear_content(); y = -1; }
             win->display("error:  ricetta non trovata.", ++y, 0);
             win->display_refresh(">> inserire nome: ", ++y, 0);
         }
     }
+
     // resetto impostazioni di partenza
     noecho();
     curs_set(0);
@@ -240,7 +264,6 @@ int main(int argc, char **argv) {
     curs_set(0);                         // cursore non visibile
     signal(SIGWINCH, wm->handle_resize); // gestione ridimesionamento terminal
 
-    // creazione finestre
     // finestra menu
     wm->create_win("menu", 8, 40, 0, 142)->set_border();
     wm->get_focused()->display_refresh(kMenu, 1, 1);
@@ -263,7 +286,7 @@ int main(int argc, char **argv) {
                 wm->get_focused()->clear_content();
                 break;
             case 'n':
-                navitate_opt(wm->get_focused(), c_book);
+                navigate_opt(wm->get_focused(), c_book);
                 break;
             default: continue;
         }
