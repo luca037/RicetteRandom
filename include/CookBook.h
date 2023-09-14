@@ -11,7 +11,6 @@
 
 namespace giallozafferano {
 
-
 // Classe che rappresenta un libro di ricette.
 class CookBook {
  public:

@@ -29,7 +29,7 @@ const std::string kDowloadRecipeCmd = "../RicetteRandom";
 // Opzioni applicazione.
 const std::string kMenu{
     "Scegli una delle seguenti opzioni:\n \
-    r - Ricetta random; \n \
+    r - Ricetta random;\n \
     f - Ricerca ricetta;\n \
     c - Pulisci output;\n \
     n - Naviga ricettario;\n \
@@ -71,7 +71,7 @@ void display_recipe_info(const std::shared_ptr<gz::Window>& win, const gz::Recip
     win->display_refresh(oss.str(), y, x);
 }
 
-// Gestine cursore per navigare i menu. Il cursore si muove verso lungo le ordinate
+// Gestine cursore per navigare i menu. Il cursore si muove lungo le ordinate
 // usando j, k (vim). Per confermare la scelta si utilizza l, in tal caso viene 
 // tornato il valore corrisponde alla posizione (ordinate) del cursore.
 // Altrimenti, se premo:
@@ -112,63 +112,65 @@ int manage_cursor(const std::shared_ptr<gz::Window>& win, int start_y, int start
 
 // Gestione opzione ricetta random.
 void random_recipe_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBook& book) {
-    static const std::vector<std::string> types_list{book.get_recipes_types()};
+    // salvo le portate (non cambia durante l'esecuzione)
+    static const std::vector<std::string> types{book.get_recipes_types()};
 
     // stampa menu di selezione portata
     win->clear_content();
     win->display("- Random - Scegli una delle seguenti portate:", 0, 0);
-    display_types_menu(win, types_list, 1, 0);
+    display_types_menu(win, types, 1, 0);
 
     // stampa ricetta random
     int selected{1};
-    while ((selected = manage_cursor(win, selected, 2, types_list.size(), 1)) > 0) {
+    while ((selected = manage_cursor(win, selected, 2, types.size(), 1)) > 0) {
         // salvo le ricette della portata selezionata
-        std::map<std::string, gz::Recipe> rec{book.get_recipes(types_list[selected - 1])};
+        std::map<std::string, gz::Recipe> recipes{book.get_recipes(types[selected - 1])};
 
         // stampa ricetta casuale
         win->clear_content();
-        auto it = rec.begin();
-        std::advance(it, random_int(0, rec.size() - 1));
+        auto it = recipes.begin();
+        std::advance(it, random_int(0, recipes.size() - 1));
         display_recipe_info(win, it->second, 0, 0);
 
         // aspetto che che l'utente torni indietro dalla selezione
         for (char c{}; c != 'h'; c = win->get_ch()) /* wait */;
         win->clear_content();
         win->display("- Random - Scegli una delle seguenti portate:", 0, 0);
-        display_types_menu(win, types_list, 1, 0);
+        display_types_menu(win, types, 1, 0);
     }
     win->clear();
 }
 
 // Gestione menu di navigazione.
 void navigate_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBook& book) {
-    static const std::vector<std::string> types_list{book.get_recipes_types()};
+    // salvo le portate (non cambia durante l'esecuzione)
+    static const std::vector<std::string> types{book.get_recipes_types()};
 
     // display menu iniziale
     win->clear_content();
     win->display("- Navigazione -", 0, 0);
-    display_types_menu(win, types_list, 1, 0);
+    display_types_menu(win, types, 1, 0);
 
     // gestione navigazione
     int input{1};
-    while ((input = manage_cursor(win, input, 2, types_list.size(), 1)) > 0 ) {
+    while ((input = manage_cursor(win, input, 2, types.size(), 1)) > 0 ) {
         // salvo le ricette della portata selezionata
-        std::map<std::string, gz::Recipe> rec{book.get_recipes(types_list[input - 1])};
+        std::map<std::string, gz::Recipe> recipes{book.get_recipes(types[input - 1])};
 
         // stampa ricette 
         win->clear_content();
-        auto it = rec.begin();
+        auto it = recipes.begin();
         display_recipe_info(win, it->second, 0, 0);
         for (char c{}; c != 'h'; c = win->get_ch()) {
             switch (c) {
                 case 'j':
-                    if (++it != rec.end()) {
+                    if (++it != recipes.end()) {
                         win->clear_content();
                         display_recipe_info(win, it->second, 0, 0);
                     }
                     break;
                 case 'k':
-                    if (it != rec.begin()) {
+                    if (it != recipes.begin()) {
                         --it;
                         win->clear_content();
                         display_recipe_info(win, it->second, 0, 0);
@@ -181,7 +183,7 @@ void navigate_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBook& bo
         // display menu iniziale (se torno indietro dalla selezione)
         win->clear_content();
         win->display("- Navigazione -", 0, 0);
-        display_types_menu(win, types_list, 1, 0);
+        display_types_menu(win, types, 1, 0);
     }
     win->clear();
 }
@@ -228,11 +230,16 @@ int main(int argc, char **argv) {
     // gestione opt
     int parse;
     char* url{nullptr};
-    while ((parse = getopt(argc, argv, "d:")) != -1) {
+    bool quit{};
+    while ((parse = getopt(argc, argv, "qd:")) != -1) {
         switch (parse) {
             // lancia il dowload delle ricette
             case 'd':
                 url = optarg;
+                break;
+            // esce dopo il download
+            case 'q':
+                quit = true;
                 break;
             case '?':
                 return 1;
@@ -240,6 +247,7 @@ int main(int argc, char **argv) {
     }
     if (url) {
         std::system((kDowloadRecipeCmd + " " + url).c_str());
+        if (quit) return 0;
     } 
 
     // init book e deserializer
@@ -265,21 +273,21 @@ int main(int argc, char **argv) {
     signal(SIGWINCH, wm->handle_resize); // gestione ridimesionamento terminal
 
     // finestra menu
-    wm->create_win("menu", 8, 40, 0, 142)->set_border();
+    wm->create_win("menu", 8, 40, 0, 0)->set_border();
     wm->get_focused()->display_refresh(kMenu, 1, 1);
 
     // finestra principale
-    wm->create_win("border-main", 40, 140, 0, 0)->set_border(); // funge solo da bordo
+    wm->create_win("border-main", 40, 140, 10, 0)->set_border(); // funge solo da bordo
     wm->get_focused()->refresh();
-    wm->create_win("main", 38, 138, 1, 1);
+    wm->create_win("main", 38, 138, 11, 1);
 
     // start applicazione
     for (char input{}; input != 'q'; input = wm->get_focused()->get_ch()) {
         switch (input) {
-            case '1':
+            case 'r':
                 random_recipe_opt(wm->get_focused(), c_book);
                 break;
-            case '2':
+            case 'f':
                 find_recipe_opt(wm->get_focused(), c_book);
                 break;
             case 'c':

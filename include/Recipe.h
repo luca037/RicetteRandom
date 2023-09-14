@@ -7,6 +7,7 @@
 
 namespace giallozafferano {
 
+// Classe che rappresenta una ricetta.
 class Recipe {
  public:
     Recipe(const std::string& name="", const std::string& ing="", const std::string& prep="") :

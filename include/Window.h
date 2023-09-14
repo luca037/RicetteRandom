@@ -7,6 +7,7 @@
 
 namespace giallozafferano {
 
+// Classe che rappresenta una finestra.
 class Window {
  public:
     Window(int h=0, int l=0, int y=0, int x=0) : 

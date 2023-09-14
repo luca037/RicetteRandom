@@ -9,6 +9,7 @@
 
 namespace giallozafferano {
 
+// Classe che rappresenta il gestore delle finestre.
 class WindowManager {
  public:
      static std::shared_ptr<WindowManager> get_instance() {

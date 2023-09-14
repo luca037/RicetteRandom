@@ -7,6 +7,7 @@
 
 namespace giallozafferano {
 
+// Classe che rappresenta un deserializzatore xml di ricette.
 class XmlRecipeDeserializer {
  public:
      XmlRecipeDeserializer() {}
