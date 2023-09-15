@@ -36,30 +36,16 @@ class Recipe {
     // Set preparation.
     void set_preparation(const std::string& prep) { preparation_ = prep; }
 
-    friend bool operator==(const Recipe& lhs, const Recipe& rhs) { 
-        return tolower(lhs.name()) == tolower(rhs.name());
-    }
-
-    friend bool operator!=(const Recipe& lhs, const Recipe& rhs) { 
-        return tolower(lhs.name()) != tolower(rhs.name());
-    }
-
-    friend std::ostream& operator<<(std::ostream& os, const Recipe& r) {
-        return os << "{" 
-            << std::quoted("Name") << ": " << std::quoted(r.name_) << ", "
-            << std::quoted("Ingredients") << ": " << std::quoted(r.ingredients_) << ", "
-            << std::quoted("Preparation") << ": " << std::quoted(r.preparation_)
-            << "}";
-    }
-
-
  private:
     std::string name_;
     std::string ingredients_;
     std::string preparation_;
-    static std::string tolower(const std::string& s);
 };
 
+std::string tolower(const std::string& s);
+bool operator==(const Recipe& lhs, const Recipe& rhs);
+bool operator!=(const Recipe& lhs, const Recipe& rhs);
+std::ostream& operator<<(std::ostream& os, const Recipe& r);
 
 } // end namespace
 

@@ -31,11 +31,16 @@ const std::string kMenu{
     "Scegli una delle seguenti opzioni:\n \
     r - Ricetta random;\n \
     f - Ricerca ricetta;\n \
-    c - Pulisci output;\n \
     n - Naviga ricettario;\n \
     q - Per uscire/annullare."
 
 };
+
+const std::string kVimKeys{"Comandi:\n \
+    j -> Giù;\n \
+    k -> Su;\n \
+    h -> Sinistra;\n \
+    l -> Destra."};
 
 // Torna un numero random intero compreso nel range [min, max].
 int random_int(int min, int max) {
@@ -272,14 +277,15 @@ int main(int argc, char **argv) {
     curs_set(0);                         // cursore non visibile
     signal(SIGWINCH, wm->handle_resize); // gestione ridimesionamento terminal
 
-    // finestra menu
+
+    // info box 
     wm->create_win("menu", 8, 40, 0, 0)->set_border();
     wm->get_focused()->display_refresh(kMenu, 1, 1);
+    wm->create_win("vim keys", 8, 40, 0, 41)->set_border();
+    wm->get_focused()->display_refresh(kVimKeys, 1, 1);
 
     // finestra principale
-    wm->create_win("border-main", 40, 140, 10, 0)->set_border(); // funge solo da bordo
-    wm->get_focused()->refresh();
-    wm->create_win("main", 38, 138, 11, 1);
+    wm->create_win("main", 38, 138, 9, 1);
 
     // start applicazione
     for (char input{}; input != 'q'; input = wm->get_focused()->get_ch()) {
@@ -289,9 +295,6 @@ int main(int argc, char **argv) {
                 break;
             case 'f':
                 find_recipe_opt(wm->get_focused(), c_book);
-                break;
-            case 'c':
-                wm->get_focused()->clear_content();
                 break;
             case 'n':
                 navigate_opt(wm->get_focused(), c_book);

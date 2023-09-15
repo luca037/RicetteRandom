@@ -28,10 +28,10 @@ class CookBook {
                     return p.first == type;
                 });
         if (it != recipes_.end())
-            it->second[r.name()] = r;
+            it->second[tolower(r.name())] = r;
         else
             recipes_.push_back(
-                    std::make_pair(type, std::map<std::string, Recipe>{{r.name(), r}})
+                    std::make_pair(type, std::map<std::string, Recipe>{{tolower(r.name()), r}})
             );
     }
 
@@ -58,7 +58,7 @@ class CookBook {
     // ricetta vuota.
     Recipe find(const std::string& name) const {
         for (const auto& p : recipes_) {
-           auto it = p.second.find(name);
+           auto it = p.second.find(tolower(name));
            if (it != p.second.end())
                return it->second;
         }
