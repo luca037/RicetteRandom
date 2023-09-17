@@ -48,7 +48,7 @@ class WindowManager {
          // ridisegno tutte le finestre
          for (auto& p : windows_) {
              // pulizia finestra
-             std::string cont = p.second->content();
+             std::string cont = p.second->last_content();
              p.second->clear_content();
              // ridisegno la finestra
              p.second->resize(p.second->height(), p.second->length());

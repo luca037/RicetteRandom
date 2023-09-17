@@ -2,6 +2,16 @@
 
 namespace giallozafferano {
 
+Window::Window(int h, int l, int y, int x) 
+    : height_{h},
+      length_{l},
+      y_pos_{y},
+      x_pos_{x},
+      last_content_{},
+      has_border_{} {
+        win_ = newwin(height_, length_, y_pos_, x_pos_);
+}
+
 Window::Window(const Window& w) :
     height_{w.height_}, length_{w.length_}, y_pos_{w.y_pos_}, x_pos_{w.x_pos_} {
     win_ = newwin(height_, length_, y_pos_, x_pos_); 

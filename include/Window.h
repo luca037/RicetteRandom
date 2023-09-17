@@ -10,10 +10,7 @@ namespace giallozafferano {
 // Classe che rappresenta una finestra.
 class Window {
  public:
-    Window(int h=0, int l=0, int y=0, int x=0) : 
-        height_{h}, length_{l}, y_pos_{y}, x_pos_{x}, content_{}, has_border_{} { 
-            win_ = newwin(height_, length_, y_pos_, x_pos_); 
-        }
+    Window(int h=0, int l=0, int y=0, int x=0);
 
     Window(const Window& w);
     Window(Window&& w);
@@ -31,7 +28,7 @@ class Window {
 
     // Torna il contenuto della finestra (ultima stringa stampata con display o
     // display_refresh).
-    std::string content() const { return content_; }
+    std::string last_content() const { return last_content_; }
 
     // Disegna il bordo alla finestra.
     void set_border() { 
@@ -48,26 +45,20 @@ class Window {
     void display(const std::string& str, int y, int x) { 
         mvwprintw(win_, y, x, "%s", str.c_str());
         if (has_border_) set_border();
-        content_ = str; 
+        last_content_ = str; 
     }
 
     // Cancella il contenuto della finestra e il bordo.
     void clear() { 
         wclear(win_); 
-        content_ = "";
+        last_content_ = "";
         has_border_ = false; 
-    }
-
-    // Cancella il contenuto della finestra. (Diverso da clear, vedi "man werase")
-    void erase() {
-        werase(win_);
-        content_ = "";
-        has_border_ = false;
     }
 
     // Cancella il contenuto, mantiene il bordo.
     void clear_content() {
         wclear(win_);
+        last_content_ = "";
         if (has_border_) set_border();
     }
 
@@ -113,7 +104,7 @@ class Window {
     int x_pos_;
     int y_pos_;
     bool has_border_;
-    std::string content_;
+    std::string last_content_;
 };
  
 } // end namespace

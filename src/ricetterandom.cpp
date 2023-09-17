@@ -39,8 +39,8 @@ const std::string kMenu{
 const std::string kVimKeys{"Comandi:\n \
     j -> Giù;\n \
     k -> Su;\n \
-    h -> Sinistra;\n \
-    l -> Destra."};
+    h -> Sinistra (indietro);\n \
+    l -> Destra (seleziona)."};
 
 // Torna un numero random intero compreso nel range [min, max].
 int random_int(int min, int max) {
@@ -90,25 +90,25 @@ int manage_cursor(const std::shared_ptr<gz::Window>& win, int start_y, int start
     // gestione movimento
     for (char input{}; input != 'q'; input = win->get_ch()) {
         switch (input) {
-            case 'l': // right (select item)
-                win->display_refresh(" ", cur_y, start_x);
-                return cur_y;
-                break;
-            case 'h': // left (go back)
-                win->display_refresh(" ", cur_y, start_x);
-                return -2;
-                break;
-            case 'k': // up
-                win->display(" ", cur_y, start_x);
-                cur_y = cur_y == min_y ? max_y : cur_y - 1;
-                win->display_refresh(">", cur_y, start_x);
-                break;
-            case 'j': // down
-                win->display(" ", cur_y, start_x);
-                cur_y = cur_y == max_y ? min_y : cur_y + 1;
-                win->display_refresh(">", cur_y, start_x);
-                break;
-            defalut: continue;
+        case 'l': // right (select item)
+            win->display_refresh(" ", cur_y, start_x);
+            return cur_y;
+            break;
+        case 'h': // left (go back)
+            win->display_refresh(" ", cur_y, start_x);
+            return -2;
+            break;
+        case 'k': // up
+            win->display(" ", cur_y, start_x);
+            cur_y = cur_y == min_y ? max_y : cur_y - 1;
+            win->display_refresh(">", cur_y, start_x);
+            break;
+        case 'j': // down
+            win->display(" ", cur_y, start_x);
+            cur_y = cur_y == max_y ? min_y : cur_y + 1;
+            win->display_refresh(">", cur_y, start_x);
+            break;
+        default: continue;
         }
     }
     win->display_refresh(" ", cur_y, start_x);
@@ -168,20 +168,20 @@ void navigate_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBook& bo
         display_recipe_info(win, it->second, 0, 0);
         for (char c{}; c != 'h'; c = win->get_ch()) {
             switch (c) {
-                case 'j':
-                    if (++it != recipes.end()) {
-                        win->clear_content();
-                        display_recipe_info(win, it->second, 0, 0);
-                    }
-                    break;
-                case 'k':
-                    if (it != recipes.begin()) {
-                        --it;
-                        win->clear_content();
-                        display_recipe_info(win, it->second, 0, 0);
-                    }
-                    break;
-                default: continue;
+            case 'j':
+                if (++it != recipes.end()) {
+                    win->clear_content();
+                    display_recipe_info(win, it->second, 0, 0);
+                }
+                break;
+            case 'k':
+                if (it != recipes.begin()) {
+                    --it;
+                    win->clear_content();
+                    display_recipe_info(win, it->second, 0, 0);
+                }
+                break;
+            default: continue;
             }
         }
 
@@ -290,16 +290,16 @@ int main(int argc, char **argv) {
     // start applicazione
     for (char input{}; input != 'q'; input = wm->get_focused()->get_ch()) {
         switch (input) {
-            case 'r':
-                random_recipe_opt(wm->get_focused(), c_book);
-                break;
-            case 'f':
-                find_recipe_opt(wm->get_focused(), c_book);
-                break;
-            case 'n':
-                navigate_opt(wm->get_focused(), c_book);
-                break;
-            default: continue;
+        case 'r':
+            random_recipe_opt(wm->get_focused(), c_book);
+            break;
+        case 'f':
+            find_recipe_opt(wm->get_focused(), c_book);
+            break;
+        case 'n':
+            navigate_opt(wm->get_focused(), c_book);
+            break;
+        default: continue;
         }
     }
 
