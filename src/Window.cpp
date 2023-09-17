@@ -1,4 +1,5 @@
 #include "../include/Window.h"
+#include <curses.h>
 
 namespace giallozafferano {
 
@@ -7,13 +8,19 @@ Window::Window(int h, int l, int y, int x)
       length_{l},
       y_pos_{y},
       x_pos_{x},
-      last_content_{},
-      has_border_{} {
-        win_ = newwin(height_, length_, y_pos_, x_pos_);
+      has_border_{} 
+{
+    win_ = newwin(height_, length_, y_pos_, x_pos_);
+    content_ = std::vector(height_, std::vector<char>(length_));
 }
 
-Window::Window(const Window& w) :
-    height_{w.height_}, length_{w.length_}, y_pos_{w.y_pos_}, x_pos_{w.x_pos_} {
+Window::Window(const Window& w) 
+    : height_{w.height_},
+      length_{w.length_}, 
+      y_pos_{w.y_pos_},
+      x_pos_{w.x_pos_},
+      content_{w.content_}
+{
     win_ = newwin(height_, length_, y_pos_, x_pos_); 
 }
 
@@ -23,17 +30,24 @@ Window& Window::operator=(const Window& w) {
     x_pos_ = w.x_pos_;
     y_pos_ = w.y_pos_;
     win_ = newwin(height_, length_, y_pos_, x_pos_); 
+    content_ = w.content_;
     return *this;
 }
 
-Window::Window(Window&& w) :
-    height_{w.height_}, length_{w.length_}, y_pos_{w.y_pos_}, x_pos_{w.x_pos_} {
+Window::Window(Window&& w) 
+    : height_{w.height_},
+      length_{w.length_}, 
+      y_pos_{w.y_pos_},
+      x_pos_{w.x_pos_},
+      content_{w.content_}
+{
     win_ = newwin(height_, length_, y_pos_, x_pos_); 
     w.height_ = 0;
     w.length_ = 0;
     w.x_pos_ = 0;
     w.y_pos_ = 0;
     w.win_ = nullptr;
+    w.content_ = {{}};
 }
 
 Window& Window::operator=(Window&& w) {
@@ -43,13 +57,31 @@ Window& Window::operator=(Window&& w) {
         x_pos_ = w.x_pos_;
         y_pos_ = w.y_pos_;
         win_ = newwin(height_, length_, y_pos_, x_pos_); 
+        content_ = w.content_;
         w.height_ = 0;
         w.length_ = 0;
         w.x_pos_ = 0;
         w.y_pos_ = 0;
         w.win_ = nullptr;
+        w.content_=  {{}};
     }
     return *this;
+}
+
+void Window::display(const std::string& str, int y, int x) { 
+    mvwprintw(win_, y, x, "%s", str.c_str());
+    if (has_border_) set_border();
+    for (int y = 0; y < height_; ++y)
+        for (int x = 0; x < length_; ++x)
+            content_[y][x] = mvwinch(win_, y, x);
+}
+
+void Window::redraw() {
+    for (int y = 0; y < height_; ++y)
+        for (int x = 0; x < length_; ++x)
+            mvwprintw(win_, y, x, "%c", content_[y][x]);
+    wresize(win_, height_, length_);
+    if (has_border_) set_border();
 }
 
 } // end namespace

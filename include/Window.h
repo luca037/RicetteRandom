@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <curses.h>
+#include <vector>
 #include "Recipe.h"
 
 namespace giallozafferano {
@@ -10,7 +11,7 @@ namespace giallozafferano {
 // Classe che rappresenta una finestra.
 class Window {
  public:
-    Window(int h=0, int l=0, int y=0, int x=0);
+    Window(int h, int l, int y, int x);
 
     Window(const Window& w);
     Window(Window&& w);
@@ -26,10 +27,6 @@ class Window {
     // Torna true se la finestra ha il bordo.
     bool has_border() const { return has_border_; }
 
-    // Torna il contenuto della finestra (ultima stringa stampata con display o
-    // display_refresh).
-    std::string last_content() const { return last_content_; }
-
     // Disegna il bordo alla finestra.
     void set_border() { 
         wborder(win_, 0, 0, 0, 0, 0, 0, 0, 0);
@@ -37,33 +34,30 @@ class Window {
     }
 
     // Rimuove il bordo alla finestra al prossimo display.
-    void remove_border() {
-        has_border_ = false;
-    }
+    void remove_border() { has_border_ = false; }
 
     // Scrive str nella finestra a partire dalle coordinate passate.
-    void display(const std::string& str, int y, int x) { 
-        mvwprintw(win_, y, x, "%s", str.c_str());
-        if (has_border_) set_border();
-        last_content_ = str; 
-    }
+    void display(const std::string& str, int y, int x);
 
     // Cancella il contenuto della finestra e il bordo.
     void clear() { 
         wclear(win_); 
-        last_content_ = "";
+        content_ = std::vector(height_, std::vector<char>(length_));
         has_border_ = false; 
     }
 
     // Cancella il contenuto, mantiene il bordo.
     void clear_content() {
         wclear(win_);
-        last_content_ = "";
+        content_ = std::vector(height_, std::vector<char>(length_));
         if (has_border_) set_border();
     }
 
     // Refresh finestra.
     void refresh() { wrefresh(win_); }
+
+    // Ristampa contenuto.
+    void redraw();
 
     // Display poi refresh finestra.
     void display_refresh(const std::string& str, int y, int x) {
@@ -81,20 +75,6 @@ class Window {
         return str;
     }
 
-    // Ridimensiona la finestra.
-    void resize(int y, int x) {
-        wresize(win_, y, x);
-        height_ = y;
-        length_ = x;
-    }
-
-    // Sposta la finestra.
-    void move(int y, int x) {
-        mvwin(win_, y, x);
-        y_pos_ = y;
-        x_pos_ = x;
-    }
-
     ~Window() { delwin(win_); }
 
  private:
@@ -104,7 +84,7 @@ class Window {
     int x_pos_;
     int y_pos_;
     bool has_border_;
-    std::string last_content_;
+    std::vector<std::vector<char>> content_;
 };
  
 } // end namespace
