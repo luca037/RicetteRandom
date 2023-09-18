@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <curses.h>
+#include <iostream>
 #include <vector>
 #include "Recipe.h"
 
@@ -54,10 +55,10 @@ class Window {
     }
 
     // Refresh finestra.
-    void refresh() { wrefresh(win_); }
+    void refresh() const { wrefresh(win_); }
 
     // Ristampa contenuto.
-    void redraw();
+    void redraw() const;
 
     // Display poi refresh finestra.
     void display_refresh(const std::string& str, int y, int x) {
@@ -73,6 +74,17 @@ class Window {
         char str[256];
         wgetnstr(win_, str, sizeof(str));
         return str;
+    }
+
+    // Posiziona il cursore alle coordinate specificate.
+    void move_cur(int y, int x) { wmove(win_, y, x); }
+
+    void to_string() {
+        for (const std::vector<char>& row : content_) {
+            for (char ch : row)
+                std::cout << ch << "\n";
+            std::cout << "\n";
+        }
     }
 
     ~Window() { delwin(win_); }
