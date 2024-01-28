@@ -26,20 +26,17 @@ const std::string kRecipesDirsPaths = "./recipesDirsPaths.txt";
 const std::string kDowloadRecipeCmd = "../RicetteRandom";
 
 // Opzioni applicazione.
-const std::string kMenu{
-    "Scegli una delle seguenti opzioni:\n \
-    r - Ricetta random;\n \
-    f - Ricerca ricetta;\n \
-    n - Naviga ricettario;\n \
-    q - Per uscire/annullare."
-
+const std::vector<std::string> kMenuOpt{
+    "Ricetta random",
+    "Ricerca ricetta",
+    "Naviga ricettario"
 };
 
 const std::string kVimKeys{"Comandi:\n \
-    j -> Giù;\n \
-    k -> Su;\n \
-    h -> Sinistra (indietro);\n \
-    l -> Destra (seleziona)."};
+    j -> Down;\n \
+    k -> Up;\n \
+    h -> Left;\n \
+    l -> Right."};
 
 // Torna un numero random intero compreso nel range [min, max].
 int random_int(int min, int max) {
@@ -55,13 +52,14 @@ std::string parent_name(const fs::path& path) {
     return path.parent_path().string().substr(pos + 1);
 }
 
-// Torna una striga contenente il menu delle portate.
+// Stampa le entries nella finestra win a partire dalla posizione passsata.
+// Le opzioni vengono stampate sulla stessa colonna.
 // La numerazione delle opzioni parte dall'indice 1.
-void display_types_menu(const std::shared_ptr<gz::Window>& win, const std::vector<std::string>& opts, int y, int x) {
+void display_menu_entries(const std::shared_ptr<gz::Window>& win, const std::vector<std::string>& entries, int y, int x) {
     std::ostringstream menu;
     int i{1};
-    for (const std::string& opt : opts)
-        menu << "    "  << std::to_string(i++) + " - " << opt << '\n';
+    for (const std::string& e : entries)
+        menu << "    "  << std::to_string(i++) + " - " << e << '\n';
     win->display_refresh(menu.str(), y, x);
 }
 
@@ -122,7 +120,7 @@ void random_recipe_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBoo
     // stampa menu di selezione portata
     win->clear_content();
     win->display("- Random - Scegli una delle seguenti portate:", 0, 0);
-    display_types_menu(win, types, 1, 0);
+    display_menu_entries(win, types, 1, 0);
 
     // stampa ricetta random
     int selected{1};
@@ -140,7 +138,7 @@ void random_recipe_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBoo
         for (char c{}; c != 'h'; c = win->get_ch()) /* wait */;
         win->clear_content();
         win->display("- Random - Scegli una delle seguenti portate:", 0, 0);
-        display_types_menu(win, types, 1, 0);
+        display_menu_entries(win, types, 1, 0);
     }
     win->clear();
 }
@@ -153,7 +151,7 @@ void navigate_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBook& bo
     // display menu iniziale
     win->clear_content();
     win->display("- Navigazione -", 0, 0);
-    display_types_menu(win, types, 1, 0);
+    display_menu_entries(win, types, 1, 0);
 
     // gestione navigazione
     int input{1};
@@ -187,7 +185,7 @@ void navigate_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBook& bo
         // display menu iniziale (se torno indietro dalla selezione)
         win->clear_content();
         win->display("- Navigazione -", 0, 0);
-        display_types_menu(win, types, 1, 0);
+        display_menu_entries(win, types, 1, 0);
     }
     win->clear();
 }
@@ -228,6 +226,13 @@ void find_recipe_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBook&
     noecho();
     curs_set(0);
     win->clear_content();
+}
+
+// Stampa in win il menu principale.
+void display_main_menu(const std::shared_ptr<gz::Window>& win, int y, int x) {
+    win->clear_content();
+    win->display_refresh("- Menu principale -", y, x);
+    display_menu_entries(win, kMenuOpt, y+1, 0);
 }
 
 int main(int argc, char **argv) {
@@ -278,27 +283,31 @@ int main(int argc, char **argv) {
 
 
     // info box 
-    wm->create_win("menu", 8, 40, 0, 0)->set_border();
-    wm->get_focused()->display_refresh(kMenu, 1, 1);
-    wm->create_win("vim keys", 8, 40, 0, 41)->set_border();
+    //wm->create_win("menu", 8, 40, 0, 0)->set_border();
+    //wm->get_focused()->display_refresh(kMenu, 1, 1);
+    wm->create_win("vim keys", 8, 40, 0, 0)->set_border();
     wm->get_focused()->display_refresh(kVimKeys, 1, 1);
 
     // finestra principale
-    wm->create_win("main", 38, 138, 9, 1);
+    wm->create_win("main", 38, 138, 9, 0);
+    display_main_menu(wm->get_focused(), 0, 0);
 
-    // start applicazione
-    for (char input{}; input != 'q'; input = wm->get_focused()->get_ch()) {
+    // gestione comandi
+    int input{1};
+    while ((input = manage_cursor(wm->get_focused(), input, 2, kMenuOpt.size(), 1)) > 0) {
         switch (input) {
-        case 'r':
+        case 1:
             random_recipe_opt(wm->get_focused(), c_book);
+            display_main_menu(wm->get_focused(), 0, 0);
             break;
-        case 'f':
+        case 2:
             find_recipe_opt(wm->get_focused(), c_book);
+            display_main_menu(wm->get_focused(), 0, 0);
             break;
-        case 'n':
+        case 3:
             navigate_opt(wm->get_focused(), c_book);
+            display_main_menu(wm->get_focused(), 0, 0);
             break;
-        default: continue;
         }
     }
 
