@@ -1,11 +1,9 @@
 #ifndef WINDOW_H
 #define WINDOW_H
 
-#include <cstdlib>
-#include <curses.h>
-#include <iostream>
 #include <vector>
-#include "Recipe.h"
+#include <string>
+#include <curses.h>
 
 namespace giallozafferano {
 

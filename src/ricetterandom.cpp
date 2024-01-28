@@ -11,7 +11,6 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include <iostream>
 
 #include "../include/XmlRecipeDeserializer.h"
 #include "../include/CookBook.h"
