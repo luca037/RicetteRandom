@@ -21,18 +21,19 @@ const kTOT_PAGES = 463
 // kTOT_PAGES * kRECIPES_PER_PAGE = # tot ricette
 const kRECIPES_PER_PAGE = 15
 
-// Path file contenente i path delle cartelle contenenti le ricette.
-const kRECIPES_DIRS_PATHS = "recipesDirsPaths.txt"
+
+// Nome cartella che rappresenta il ricettario.
+const kRECIPE_BOOK_DIR_PATH = "./ricettario/"
 
 // Torna il path della cartella in cui salvare i file xml delle ricette.
-// Il nome viene costruito dal kURL.
+// Il nome viene costruito dall'url passato.
 func getOutPathDir(url string) string {
 	s := strings.Split(url, "/")
 	var path string = os.Getenv("PWD") + "/"
 	if url[len(url)-1] == '/' {
-		path += "ricette/" + strings.ToLower(s[len(s)-2]) + "/"
+		path += kRECIPE_BOOK_DIR_PATH + strings.ToLower(s[len(s)-2]) + "/"
 	} else {
-		path += "ricette/" + strings.ToLower(s[len(s)-1]) + "/"
+		path += kRECIPE_BOOK_DIR_PATH + strings.ToLower(s[len(s)-1]) + "/"
 	}
 	return path
 }
@@ -91,19 +92,8 @@ func main() {
 	go gzut.MkeRequest(recipesUrls, recipesHeads)
 	go gzut.ParseRecipe(recipesHeads, recipesToSave)
 
-	// salvo dove si trova la cartella contenente i file xml (serve al programma in C++)
-	file, err := os.OpenFile(kRECIPES_DIRS_PATHS, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
-	// controllo se ho già salvato il path nel file
-	outPathDir := getOutPathDir(url)
-	if !findAbsPathInFile(file, outPathDir) {
-		file.Write([]byte(outPathDir + "\n"))
-	}
-
 	// serializzazione ricette in file formato xml
+	outPathDir := getOutPathDir(url) // path cartella in cui salvare le ricette
 	if err := os.MkdirAll(outPathDir, os.ModePerm); err != nil {
 		log.Fatal(err)
 	}

@@ -2,9 +2,9 @@
 #include <csignal>
 #include <curses.h>
 #include <filesystem>
-#include <fstream>
 #include <bits/getopt_core.h>
 #include <cstdlib>
+#include <iostream>
 #include <iterator>
 #include <random>
 #include <memory>
@@ -19,10 +19,10 @@
 namespace fs = std::filesystem;
 namespace gz = giallozafferano;
 
-// Path file contenente i path in cui si trovano le ricette scaricate dal programma Go.
-const std::string kRecipesDirsPaths = "./recipesDirsPaths.txt";
+// Path cartella che contiene tutte le cartelle contenenti le ricette serializzate
+const std::string kRecipesDirDefaultPath = "./ricettario";
 
-// Comando per lanciare l'esecuzione del programama Go che scarica le ricette. (Compila ed esegue).
+// Comando per lanciare l'esecuzione del programama Go che scarica le ricette.
 const std::string kDowloadRecipeCmd = "../RicetteRandom";
 
 // Opzioni applicazione.
@@ -105,7 +105,6 @@ int manage_cursor(const std::shared_ptr<gz::Window>& win, int start_y, int start
             cur_y = cur_y == max_y ? min_y : cur_y + 1;
             win->display_refresh(">", cur_y, start_x);
             break;
-        default: continue;
         }
     }
     win->display_refresh(" ", cur_y, start_x);
@@ -142,7 +141,7 @@ void random_recipe_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBoo
     }
     win->clear();
 }
-
+ 
 // Gestione menu di navigazione.
 void navigate_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBook& book) {
     // salvo le portate (non cambia durante l'esecuzione)
@@ -178,7 +177,6 @@ void navigate_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBook& bo
                     display_recipe_info(win, it->second, 0, 0);
                 }
                 break;
-            default: continue;
             }
         }
 
@@ -263,17 +261,27 @@ int main(int argc, char **argv) {
     gz::CookBook c_book{};
     gz::XmlRecipeDeserializer deserializer{};
 
-    // deserializzo le ricette contenute in tutte le cartelle e le inserisco nel book
-    std::ifstream ifile{kRecipesDirsPaths};
-    for (std::string line; ifile >> line; ) {
-        for (const fs::directory_entry& entry : fs::directory_iterator(line)) {
-            c_book.insert(
-                    parent_name(entry), 
-                    deserializer.deserialize(entry.path().string())
-            );
+    // deserializzo tutte le ricette contenute nelle cartelle contenute
+    // nella cartella kRecipesDirPath
+    if (fs::exists(kRecipesDirDefaultPath) && fs::is_directory(kRecipesDirDefaultPath)) {
+        for (const fs::directory_entry& recipes_type : fs::directory_iterator(kRecipesDirDefaultPath)) {
+            if (fs::is_directory(recipes_type)) {
+                for (const fs::directory_entry& recipe : fs::directory_iterator(recipes_type)) {
+                    if (recipe.is_regular_file()) {
+                        c_book.insert(
+                                recipes_type.path().filename(), 
+                                deserializer.deserialize(recipe.path().string())
+                        );
+                    }
+                }
+            }
         }
+    } else { // se non è stata trovato il ricettario
+        std::cerr << "Directory \'" << kRecipesDirDefaultPath << "\' was not found.\n"
+                  << "Use the -d <url> option to download some recipes.";
+        return 1;
     }
-
+ 
     // setup window manager
     std::shared_ptr<gz::WindowManager> wm = gz::WindowManager::get_instance();
     setlocale(LC_ALL, "");               // per caratteri unicode
