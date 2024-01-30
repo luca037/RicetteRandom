@@ -162,12 +162,18 @@ void navigate_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBook& bo
         win->clear_content();
         auto it = recipes.begin();
         display_recipe_info(win, it->second, 0, 0);
+        int current_index{1}; // indice ricetta corrente
+        win->display_refresh("[" + std::to_string(current_index) + "/" + std::to_string(recipes.size()) + "]", win->height() - 1, 0);
         for (char c{}; c != 'h'; c = win->get_ch()) {
             switch (c) {
             case 'j':
                 if (++it != recipes.end()) {
                     win->clear_content();
                     display_recipe_info(win, it->second, 0, 0);
+                    ++current_index;
+                    win->display_refresh("[" + std::to_string(current_index) + "/" + std::to_string(recipes.size()) + "]", win->height() - 1, 0);
+                } else {
+                    --it; // per farlo puntare sempre al penultimo elemento della mappa
                 }
                 break;
             case 'k':
@@ -175,6 +181,8 @@ void navigate_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBook& bo
                     --it;
                     win->clear_content();
                     display_recipe_info(win, it->second, 0, 0);
+                    --current_index;
+                    win->display_refresh("[" + std::to_string(current_index) + "/" + std::to_string(recipes.size()) + "]", win->height() - 1, 0);
                 }
                 break;
             }
