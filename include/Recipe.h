@@ -45,7 +45,6 @@ class Recipe {
 std::string tolower(const std::string& s);
 bool operator==(const Recipe& lhs, const Recipe& rhs);
 bool operator!=(const Recipe& lhs, const Recipe& rhs);
-std::ostream& operator<<(std::ostream& os, const Recipe& r);
 
 } // end namespace
 

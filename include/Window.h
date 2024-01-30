@@ -77,6 +77,16 @@ class Window {
     // Posiziona il cursore alle coordinate specificate.
     void move_cur(int y, int x) { wmove(win_, y, x); }
 
+    // Permette di attivare un attributo.
+    void attribute_on(int attr) {
+        wattron(win_, attr);
+    }
+
+    // Permette di disattivare un attributo.
+    void attribute_off(int attr) {
+        wattroff(win_, attr);
+    }
+
     ~Window() { delwin(win_); }
 
  private:

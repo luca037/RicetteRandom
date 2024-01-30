@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <clocale>
 #include <csignal>
 #include <curses.h>
@@ -66,11 +67,28 @@ void display_menu_entries(const std::shared_ptr<gz::Window>& win, const std::vec
 // Stampa le informazioni della ricetta sulla finestra passata partendo dalle 
 // coordinate passate.
 void display_recipe_info(const std::shared_ptr<gz::Window>& win, const gz::Recipe& recipe, int y, int x) {
-    std::ostringstream oss;
-    oss << "NOME: " << recipe.name() << '\n' << '\n'
-        << "INGREDIENTI: " << recipe.ingredients() << '\n' << '\n'
-        << "PREPARAZIONE: " << recipe.preparation();
-    win->display_refresh(oss.str(), y, x);
+    // titolo ricetta in maiuscolo
+    std::string upper_n{recipe.name()};
+    std::transform(upper_n.begin(), upper_n.end(), upper_n.begin(),
+            [](unsigned char c) { return std::toupper(c); }
+            );
+
+    // stampa titolo
+    win->attribute_on(A_BOLD);
+    win->attribute_on(A_REVERSE);
+    win->display(upper_n, 0, 0);
+    win->attribute_off(A_REVERSE);
+
+    // stampa ingredienti
+    win->display("INGREDIENTI", 2, 0);
+    win->attribute_off(A_BOLD);
+    win->display(recipe.ingredients(), 3, 0);
+
+    // stampa preparazione
+    win->attribute_on(A_BOLD);
+    win->display("PREPARAZIONE", 8, 0);
+    win->attribute_off(A_BOLD);
+    win->display(recipe.preparation(), 9, 0);
 }
 
 // Gestine cursore per navigare i menu. Il cursore si muove lungo le ordinate
@@ -139,7 +157,7 @@ void random_recipe_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBoo
         win->display("- Random - Scegli una delle seguenti portate:", 0, 0);
         display_menu_entries(win, types, 1, 0);
     }
-    win->clear();
+    win->clear_content();
 }
  
 // Gestione menu di navigazione.
@@ -193,7 +211,7 @@ void navigate_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBook& bo
         win->display("- Navigazione -", 0, 0);
         display_menu_entries(win, types, 1, 0);
     }
-    win->clear();
+    win->clear_content();
 }
 
 // Gestione ricerca ricetta e stampa risultati.
@@ -234,10 +252,10 @@ void find_recipe_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBook&
     win->clear_content();
 }
 
-// Stampa in win il menu principale.
+// Stampa il menu principale.
 void display_main_menu(const std::shared_ptr<gz::Window>& win, int y, int x) {
     win->clear_content();
-    win->display_refresh("- Menu principale -", y, x);
+    win->display("- Menu principale -", y, x);
     display_menu_entries(win, kMenuOpt, y+1, 0);
 }
 
@@ -279,7 +297,7 @@ int main(int argc, char **argv) {
                         c_book.insert(
                                 recipes_type.path().filename(), 
                                 deserializer.deserialize(recipe.path().string())
-                        );
+                                );
                     }
                 }
             }
@@ -299,13 +317,11 @@ int main(int argc, char **argv) {
 
 
     // info box 
-    //wm->create_win("menu", 8, 40, 0, 0)->set_border();
-    //wm->get_focused()->display_refresh(kMenu, 1, 1);
-    wm->create_win("vim keys", 8, 40, 0, 0)->set_border();
+    wm->create_win("vim keys", 8, 40, 0, 152)->set_border();
     wm->get_focused()->display_refresh(kVimKeys, 1, 1);
 
     // finestra principale
-    wm->create_win("main", 38, 138, 9, 0);
+    wm->create_win("main", 46, 148, 0, 0);
     display_main_menu(wm->get_focused(), 0, 0);
 
     // gestione comandi

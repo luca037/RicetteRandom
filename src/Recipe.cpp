@@ -20,13 +20,4 @@ bool operator!=(const Recipe& lhs, const Recipe& rhs) {
     return tolower(lhs.name()) != tolower(rhs.name());
 }
 
-std::ostream& operator<<(std::ostream& os, const Recipe& r) {
-    return os << "{" 
-        << std::quoted("Name") << ": " << std::quoted(r.name()) << ", "
-        << std::quoted("Ingredients") << ": " << std::quoted(r.ingredients()) << ", "
-        << std::quoted("Preparation") << ": " << std::quoted(r.preparation())
-        << "}";
 }
-
-}
-
