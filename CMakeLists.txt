@@ -20,6 +20,7 @@ add_library(Ricette
     src/XmlRecipeDeserializer.cpp
     include/WindowManager.h
     src/WindowManager.cpp
+    src/ricetterandom_utils.cpp
     )
 
 add_executable(ricetterandom

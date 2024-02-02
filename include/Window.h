@@ -1,6 +1,7 @@
 #ifndef WINDOW_H
 #define WINDOW_H
 
+#include <initializer_list>
 #include <vector>
 #include <string>
 #include <curses.h>
@@ -82,9 +83,23 @@ class Window {
         wattron(win_, attr);
     }
 
+    // Permette di attivare più attributi.
+    void attribute_on(std::initializer_list<int> attrib) {
+        for (int a : attrib) {
+            attribute_on(a);
+        }
+    }
+
     // Permette di disattivare un attributo.
     void attribute_off(int attr) {
         wattroff(win_, attr);
+    }
+
+    // Permette di disattivare più attributi.
+    void attribute_off(std::initializer_list<int> attrib) {
+        for (int a : attrib) {
+            attribute_off(a);
+        }
     }
 
     ~Window() { delwin(win_); }
