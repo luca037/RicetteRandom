@@ -31,11 +31,13 @@ const std::vector<std::string> kMenuOpt{
     "Naviga ricettario"
 };
 
-const std::string kVimKeys{"Comandi:\n \
+const std::string kVimKeys{
+    "Comandi:\n \
     j -> Down;\n \
     k -> Up;\n \
     h -> Left;\n \
-    l -> Right."};
+    l -> Right."
+};
 
 // Gestione opzione ricetta random.
 void random_recipe_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBook& book) {
@@ -47,13 +49,12 @@ void random_recipe_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBoo
     win->attribute_on({A_BOLD, A_REVERSE});
     win->display("- Random - Scegli una delle seguenti portate:", 0, 0);
     win->attribute_off({A_BOLD, A_REVERSE});
-    display_menu_entries(win, types, 1, 0);
 
     // stampa ricetta random
-    int selected{1};
-    while ((selected = manage_cursor(win, selected, 2, types.size(), 1)) > 0) {
+    std::string selected{};
+    while ((selected = manage_cursor(win, 1, 2, types)) != "") {
         // salvo le ricette della portata selezionata
-        std::map<std::string, gz::Recipe> recipes{book.get_recipes(types[selected - 1])};
+        std::map<std::string, gz::Recipe> recipes{book.get_recipes(selected)};
 
         // stampa ricetta casuale
         win->clear_content();
@@ -63,15 +64,16 @@ void random_recipe_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBoo
 
         // aspetto che che l'utente torni indietro dalla selezione
         for (char c{}; c != 'h'; c = win->get_ch()) /* wait */;
+        
+        //ristampo il menu di selezione portata (per quando torno indietro)
         win->clear_content();
         win->attribute_on({A_BOLD, A_REVERSE});
         win->display("- Random - Scegli una delle seguenti portate:", 0, 0);
         win->attribute_off({A_BOLD, A_REVERSE});
-        display_menu_entries(win, types, 1, 0);
     }
     win->clear_content();
 }
- 
+
 // Gestione menu di navigazione.
 void navigate_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBook& book) {
     // salvo le portate (non cambia durante l'esecuzione)
@@ -82,13 +84,12 @@ void navigate_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBook& bo
     win->attribute_on({A_BOLD, A_REVERSE});
     win->display("- Navigazione -", 0, 0);
     win->attribute_off({A_BOLD, A_REVERSE});
-    display_menu_entries(win, types, 1, 0);
 
     // gestione navigazione
-    int input{1};
-    while ((input = manage_cursor(win, input, 2, types.size(), 1)) > 0 ) {
+    std::string selected{};
+    while ((selected = manage_cursor(win, 1, 2, types)) != "") {
         // salvo le ricette della portata selezionata
-        std::map<std::string, gz::Recipe> recipes{book.get_recipes(types[input - 1])};
+        std::map<std::string, gz::Recipe> recipes{book.get_recipes(selected)};
 
         // stampa ricette 
         win->clear_content();
@@ -125,7 +126,6 @@ void navigate_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBook& bo
         win->attribute_on({A_BOLD, A_REVERSE});
         win->display("- Navigazione -", 0, 0);
         win->attribute_off({A_BOLD, A_REVERSE});
-        display_menu_entries(win, types, 1, 0);
     }
     win->clear_content();
 }
@@ -225,32 +225,28 @@ int main(int argc, char **argv) {
     signal(SIGWINCH, wm->handle_resize); // gestione ridimesionamento terminal
 
 
-    // info box 
+    // info box keybindings
     wm->create_win("vim keys", 8, 40, 0, 152)->set_border();
     wm->get_focused()->display_refresh(kVimKeys, 1, 1);
 
     // finestra principale
     wm->create_win("main", 46, 148, 0, 0);
-    display_main_menu(wm->get_focused(), kMenuOpt,0, 0);
+    //display_main_menu(wm->get_focused(), kMenuOpt, 0, 0);
 
     // gestione comandi
-    int input{1};
-    while ((input = manage_cursor(wm->get_focused(), input, 2, kMenuOpt.size(), 1)) > 0) {
-        switch (input) {
-        case 1:
+    std::string input{};
+    do {
+        if (input == kMenuOpt[0]) {
             random_recipe_opt(wm->get_focused(), c_book);
-            display_main_menu(wm->get_focused(), kMenuOpt,0, 0);
-            break;
-        case 2:
+        } else if (input == kMenuOpt[1]) {
             find_recipe_opt(wm->get_focused(), c_book);
-            display_main_menu(wm->get_focused(), kMenuOpt,0, 0);
-            break;
-        case 3:
+        } else if (input == kMenuOpt[2]) {
             navigate_opt(wm->get_focused(), c_book);
-            display_main_menu(wm->get_focused(), kMenuOpt,0, 0);
-            break;
         }
-    }
+        wm->get_focused()->attribute_on({A_BOLD, A_REVERSE});
+        wm->get_focused()->display("- Menu principale -", 0, 0);
+        wm->get_focused()->attribute_off({A_BOLD, A_REVERSE});
+    } while ((input = manage_cursor(wm->get_focused(), 1, 2, kMenuOpt)) != "");
 
     return 0;
 }

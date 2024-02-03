@@ -1,6 +1,5 @@
 #include <algorithm>
 #include <random>
-#include <sstream>
 #include <memory>
 
 #include "../include/Window.h"
@@ -15,26 +14,6 @@ int random_int(int min, int max) {
     std::uniform_int_distribution<> distr(min, max); // define range
     return distr(gen);
 }
-
-// Stampa le entries nella finestra win a partire dalla posizione passsata.
-// Le opzioni vengono stampate sulla stessa colonna.
-// La numerazione delle opzioni parte dall'indice 1.
-void display_menu_entries(const std::shared_ptr<gz::Window>& win, const std::vector<std::string>& entries, int y, int x) {
-    std::ostringstream menu;
-    for (const std::string& e : entries)
-        menu << "    "  << e << '\n';
-    win->display_refresh(menu.str(), y, x);
-}
-
-// Stampa il menu principale.
-void display_main_menu(const std::shared_ptr<gz::Window>& win, const std::vector<std::string>& entries,int y, int x) {
-    win->clear_content();
-    win->attribute_on({A_BOLD, A_REVERSE});
-    win->display("- Menu principale -", 0, 0);
-    win->attribute_off({A_BOLD, A_REVERSE});
-    display_menu_entries(win, entries, y+1, 0);
-}
-
 
 // Stampa le informazioni della ricetta sulla finestra passata.
 void display_recipe_info(const std::shared_ptr<gz::Window>& win, const gz::Recipe& recipe) {
@@ -63,38 +42,60 @@ void display_recipe_info(const std::shared_ptr<gz::Window>& win, const gz::Recip
 
 // Gestine cursore per navigare i menu. Il cursore si muove lungo le ordinate
 // usando j, k (vim). Per confermare la scelta si utilizza l, in tal caso viene 
-// tornato il valore corrisponde alla posizione (ordinate) del cursore.
-// Altrimenti, se premo:
-//     q (annullare) -> torna -1
-//     h (tornare inietro) -> torna -2
-int manage_cursor(const std::shared_ptr<gz::Window>& win, int start_y, int start_x, int max_y, int min_y) {
-    static const std::string cur{">"};
-    int cur_y{start_y};
-    win->display_refresh(cur, cur_y, start_x);
+// tornato il valore corrispondente all'elemento selezionato.
+// Altrimenti, se premo 'h' o 'q' ritorna l'elemento zero della classe T.
+template <typename T>
+T manage_cursor(const std::shared_ptr<gz::Window>& win, int start_y, int start_x, const std::vector<T>& entries) {
+    // stampa delle rimanenti opzioni
+    int i{start_y};
+    for (const std::string& e : entries) {
+        win->display(e, i, start_x);
+        ++i;
+    }
+
+    // evidenzio il primo elemento del menu
+    win->attribute_on(A_REVERSE);
+    win->display_refresh(entries.front(), start_y, start_x);
+    win->attribute_off(A_REVERSE);
+    
+    int cur_y{start_y}; // ordinata elemento selezionato
+    auto selected{entries.begin()}; // elemento selezionato
 
     // gestione movimento
-    for (char input{}; input != 'q'; input = win->get_ch()) {
+    for (char input{}; input != 'q' && input != 'h'; input = win->get_ch()) {
         switch (input) {
         case 'l': // right (select item)
-            win->display_refresh(" ", cur_y, start_x);
-            return cur_y;
-            break;
-        case 'h': // left (go back)
-            win->display_refresh(" ", cur_y, start_x);
-            return -2;
+            win->display_refresh(*selected, cur_y, start_x);
+            return *selected;
             break;
         case 'k': // up
-            win->display(" ", cur_y, start_x);
-            cur_y = cur_y == min_y ? max_y : cur_y - 1;
-            win->display_refresh(">", cur_y, start_x);
+            win->display(*selected, cur_y, start_x);
+            if (selected != entries.begin()) {
+                --selected;
+                --cur_y;
+            } else {
+                selected = entries.end() - 1;
+                cur_y = start_y + entries.size() - 1;
+            }
+            // highlight next item
+            win->attribute_on(A_REVERSE);
+            win->display_refresh(*selected, cur_y, start_x);
+            win->attribute_off(A_REVERSE);
             break;
         case 'j': // down
-            win->display(" ", cur_y, start_x);
-            cur_y = cur_y == max_y ? min_y : cur_y + 1;
-            win->display_refresh(">", cur_y, start_x);
+            win->display(*selected, cur_y, start_x);
+            if (++selected != entries.end()) {
+                ++cur_y;
+            } else {
+                selected = entries.begin();
+                cur_y = start_y;
+            }
+            // highlight next item
+            win->attribute_on(A_REVERSE);
+            win->display_refresh(*selected, cur_y, start_x);
+            win->attribute_off(A_REVERSE);
             break;
         }
     }
-    win->display_refresh(" ", cur_y, start_x);
-    return -1;
+    return {};
 }
