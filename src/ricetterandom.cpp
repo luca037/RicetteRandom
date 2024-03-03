@@ -56,15 +56,17 @@ void random_recipe_opt(const std::shared_ptr<gz::Window>& win, const gz::CookBoo
         // salvo le ricette della portata selezionata
         std::map<std::string, gz::Recipe> recipes{book.get_recipes(selected)};
 
-        // stampa ricetta casuale
-        win->clear_content();
-        auto it = recipes.begin();
-        std::advance(it, random_int(0, recipes.size() - 1));
-        display_recipe_info(win, it->second);
+        // stampo una ricetta random finché l'untente non torna al menù prec
+        char input{'j'};
+        do {
+            if (input == 'j') {
+                win->clear_content();
+                auto it = recipes.begin();
+                std::advance(it, random_int(0, recipes.size() - 1));
+                display_recipe_info(win, it->second);
+            }
+        } while ((input = win->get_ch()) != 'h');
 
-        // aspetto che che l'utente torni indietro dalla selezione
-        for (char c{}; c != 'h'; c = win->get_ch()) /* wait */;
-        
         //ristampo il menu di selezione portata (per quando torno indietro)
         win->clear_content();
         win->attribute_on({A_BOLD, A_REVERSE});
@@ -224,14 +226,12 @@ int main(int argc, char **argv) {
     curs_set(0);                         // cursore non visibile
     signal(SIGWINCH, wm->handle_resize); // gestione ridimesionamento terminal
 
-
     // info box keybindings
     wm->create_win("vim keys", 8, 40, 0, 152)->set_border();
     wm->get_focused()->display_refresh(kVimKeys, 1, 1);
 
     // finestra principale
     wm->create_win("main", 46, 148, 0, 0);
-    //display_main_menu(wm->get_focused(), kMenuOpt, 0, 0);
 
     // gestione comandi
     std::string input{};
